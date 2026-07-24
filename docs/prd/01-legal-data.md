@@ -1,6 +1,9 @@
 # 01 · NSW/VIC 法条结构化资料（任务 2 · 3h）
 
 > 母文档 §8。**最大翻车点 = 引用错法条。宁缺毋错。**可与 02 并行（研究型 agent 后台跑，人工抽查收口）。
+>
+> 状态：**✅ 研究、关键条款复核与结构化已完成（2026-07-24）**。研究底稿见
+> [`docs/research/legal-nsw-vic.md`](../research/legal-nsw-vic.md)。
 
 ## 范围
 
@@ -14,6 +17,7 @@
 5. fair wear and tear 定义与常见判例口径
 6. condition report 规则（3-7 天窗口）
 7. 行动路线图所需机构信息：Fair Trading NSW / Consumer Affairs Victoria 投诉路径、联系方式
+8. 高频专业清洁条款、VIC Portable Rental Bond Scheme，以及已立法但未来生效规则的日期门控
 
 ## 数据结构
 
@@ -31,6 +35,7 @@
 - sourceUrl: 官方来源 URL
 - confidence: confirmed / unverified（存疑条目不得进入维权信引用）
 - checkedAt: 最后一次人工核对日期
+- effectiveFrom / effectiveTo: 可选生效区间（未来规则在生效前不得进入 prompt）
 ```
 
 `topics` 只能使用：
@@ -45,8 +50,10 @@
 - summaryZh / stepsZh
 - feeZh / timeLimitZh / phone（按需）
 - sourceUrl
+- sourceKind
 - confidence
 - checkedAt
+- effectiveFrom / effectiveTo（可选生效区间）
 ```
 
 ## 来源白名单与确认规则
@@ -61,11 +68,12 @@ Fair Trading NSW · Consumer Affairs Victoria · RTBA · NCAT · VCAT · tenants
 
 ## 验收标准
 
-- [ ] 每条法条有 act + section + quote + sourceUrl，任一缺失即标 `unverified`
-- [ ] 覆盖上述 7 类条目 × 2 州
-- [ ] 存疑条目显式标注且被 prompt 层排除在「具体法条编号」输出之外
-- [ ] `stateProcesses` 覆盖 RBO/RTBA → Fair Trading/CAV → NCAT/VCAT 路线
-- [ ] **关键条款（存管期限、claim 时限、仲裁费用）由用户查看官方链接确认**后方可标 `confirmed`
+- [x] 每条法条有 act + section + quote + sourceUrl，任一缺失即标 `unverified`
+- [x] 覆盖上述 7 类条目 × 2 州
+- [x] 存疑条目显式标注且被 confirmed-only selector 排除
+- [x] `stateProcesses` 覆盖 RBO/RTBA → Fair Trading/CAV → NCAT/VCAT 路线
+- [x] **关键条款（存管期限、claim 时限、仲裁费用）已按现行授权法案、规章及官方程序页复核并标 confirmed**
+- [x] 未来生效规则通过 `effectiveFrom` 与 confirmed-only selector 双重过滤
 
 ## 不做
 

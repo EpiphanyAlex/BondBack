@@ -7,25 +7,35 @@ export type { AUState } from "@/lib/types";
 
 export type LegalTopic = DisputeType | "all";
 export type LegalConfidence = "confirmed" | "unverified";
+export type LegalSourceKind =
+  | "legislation"
+  | "regulator-guidance"
+  | "tribunal"
+  | "tenant-advocacy";
 
 export interface LegalClause {
   id: string;
   state: AUState;
   /** 与 CaseInput.disputeTypes 共用标签；通用条目使用 "all"。 */
   topics: LegalTopic[];
-  /** 法案名，如 "Residential Tenancies Act 2010 (NSW)"。 */
+  /** 法案或规章名称，如 "Residential Tenancies Act 2010 (NSW)"。 */
   act: string;
   /** 条款号，如 "s 36"。 */
   section: string;
-  /** 官方原文引用（英文） */
+  /** 官方原文短引文（英文）。 */
   quote: string;
-  /** 中文要点解释 */
+  /** 中文要点解释。 */
   ruleZh: string;
-  /** 州立法数据库中的原文 URL。 */
+  /** 支撑本条规则的白名单来源 URL。 */
   sourceUrl: string;
+  sourceKind: LegalSourceKind;
   confidence: LegalConfidence;
-  /** ISO 日期，记录最后一次人工核对时间。 */
-  checkedAt?: string;
+  /** YYYY-MM-DD，记录最后一次人工核对日期。 */
+  checkedAt: string;
+  /** YYYY-MM-DD；未来规则在此日期前不得注入 prompt。 */
+  effectiveFrom?: string;
+  /** YYYY-MM-DD，含当日。 */
+  effectiveTo?: string;
   notes?: string;
 }
 
@@ -35,7 +45,8 @@ export type ProcessStage =
   | "tribunal";
 
 /**
- * 行动路线图使用的确定性资料。它与法条分开，避免为机构流程伪造 statute/quote。
+ * 行动路线图使用的确定性资料。它与法条分开，避免为机构流程伪造
+ * act/section/quote。
  */
 export interface StateProcess {
   id: string;
@@ -45,8 +56,13 @@ export interface StateProcess {
   summaryZh: string;
   stepsZh: string[];
   sourceUrl: string;
+  sourceKind: LegalSourceKind;
   confidence: LegalConfidence;
-  checkedAt?: string;
+  checkedAt: string;
+  /** YYYY-MM-DD；未来路线在此日期前不得展示。 */
+  effectiveFrom?: string;
+  /** YYYY-MM-DD，含当日。 */
+  effectiveTo?: string;
   feeZh?: string;
   timeLimitZh?: string;
   phone?: string;

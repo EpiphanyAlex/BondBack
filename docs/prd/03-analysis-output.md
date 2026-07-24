@@ -20,7 +20,16 @@ type AnalysisResult = {
     reasoning_zh: string                              // 给评估卡的中文解释
     statuteRefs: { act: string; section: string }[]   // 只允许引用注入的 confirmed 法条
   }[]
-  bondAlert: boolean          // bondLodged ≠ yes 时为 true
+  bondLodgementAlert: {
+    level:
+      | 'none'
+      | 'verify-record'
+      | 'possible-non-lodgement'
+      | 'authority-confirmed-missing'
+    reasoningZh: string
+    calculatedDeadline?: string
+    deadlineBasis?: string
+  }
   letterEn: string            // 正式英文维权信初稿
   letterZhNotes: string       // 中文对照解释（UI 展示，不进 PDF）
   winRate: 'high'|'medium'|'low'   // 评估卡顶部总观感
@@ -29,19 +38,32 @@ type AnalysisResult = {
 
 ## 三件套 UI
 
-1. **胜算评估卡**：逐项 ✅/❌/⚠️ + 法条编号 + 中文解释；`bondAlert` 时顶部**红色警报**：「押金可能未合法存管，此为违法行为，是你最强谈判筹码」
-2. **英文维权信**：textarea 可编辑；「下载 PDF」（前端生成，英文正文，标准信件排版）；「复制全文」按钮（微信内置浏览器下载受限的兜底）；`bondAlert` 时信中必须包含未存管段落
+1. **胜算评估卡**：逐项 ✅/❌/⚠️ + 法条编号 + 中文解释；存管状态分级展示：
+   - `verify-record`：黄色提示「尚不能判断是否已存管，请先查询 RBO/RTBA」
+   - `possible-non-lodgement`：红色提示「官方记录暂未找到，且按你提供的日期可能已超过存管期限」
+   - `authority-confirmed-missing`：红色高风险提示，陈述 authority 查询结果及计算依据；仍使用“可能违反存管义务”，不把 offence 当作已裁定事实
+2. **英文维权信**：textarea 可编辑；「下载 PDF」（前端生成，英文正文，标准信件排版）；「复制全文」按钮（微信内置浏览器下载受限的兜底）。`verify-record` 只生成核实请求；后两级可加入基于已知事实、日期和来源的未存管段落
 3. **行动路线图**：按州从 `data/legal/` 的 `stateProcesses`
    **确定性组装**（Fair Trading/CAV → NCAT/VCAT 路径、费用、时限），
    LLM 只填个性化建议；含邮件留证话术模板（「正如我们电话中沟通的…」）
    与抢先向 RTBA/RBO 发起 claim 的指引
+
+## 存管提示安全边界
+
+- `bondLodgementAlert` 由服务端确定性规则产生，LLM 不得自行升级等级。
+- 没有确认邮件、记不清付款对象或未查询记录，均不能单独证明未存管。
+- 红色提示必须展示计算依据；缺少收款人、付款日期或 NSW 分期信息时降级为 `verify-record`。
+- 最高 penalty units 是监管/刑事罚则上限，不是租客自动获得的赔偿。
+- 任何未来生效法条必须经过 `getConfirmedLegalClauses(..., asOf)` 的日期过滤。
 
 ## 验收标准
 
 - [ ] 端到端：向导填完 → 30-60s 内出三件套（部署环境，非本地）
 - [ ] 评估卡引用的法条编号全部来自注入资料，无凭空捏造（抽查 3 个 case）
 - [ ] 「拖欠租金抵扣」类 case 能诚实输出「合法别争」
-- [ ] `bondLodged: 'no'` → 红警 + 信中含未存管段落
+- [ ] 仅无确认邮件 → 黄色核实提示，信件不指控违法
+- [ ] `possible-non-lodgement` / `authority-confirmed-missing` → 红色分级提示，并展示日期与期限依据
+- [ ] LLM 无法把 `verify-record` 自行升级为红警
 - [ ] PDF 在 iPhone Safari 与桌面 Chrome 均可下载打开；微信内可复制全文
 - [ ] API 失败 → 降级提示可重试，不白屏
 

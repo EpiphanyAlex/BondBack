@@ -23,7 +23,49 @@ export const EVIDENCE_KINDS = [
 
 export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
 
-export type BondLodged = "yes" | "no" | "unsure";
+export type TriState = "yes" | "no" | "unsure";
+
+export type BondPaymentRecipient =
+  | "bond-authority"
+  | "landlord"
+  | "agent"
+  | "other"
+  | "unsure";
+
+export type BondLookupStatus =
+  | "found"
+  | "not-found"
+  | "not-checked"
+  | "unsure";
+
+export type BondLookupEvidence = "none" | "portal" | "authority-written";
+
+export interface BondLookup {
+  status: BondLookupStatus;
+  evidence: BondLookupEvidence;
+}
+
+export interface BondPayment {
+  paidTo: BondPaymentRecipient;
+  paidAt?: string;
+  paidByInstalments: TriState;
+  instalmentDates?: string[];
+  confirmationReceived: TriState;
+  lookup: BondLookup;
+}
+
+export type ClaimNoticeDeliveryMethod =
+  | "email"
+  | "post"
+  | "sms"
+  | "other"
+  | "unsure";
+
+export interface ClaimNotice {
+  receivedAt?: string;
+  dueAt?: string;
+  deliveryMethod: ClaimNoticeDeliveryMethod;
+}
 
 export interface Deduction {
   description: string;
@@ -49,7 +91,8 @@ export interface CaseInput {
   bondAmount: number;
   claimedAmount: number;
   moveOutDate: string;
-  bondLodged: BondLodged;
+  bondPayment: BondPayment;
+  claimNotice?: ClaimNotice;
   deductions: Deduction[];
   evidence: EvidenceImage[];
   propertyAddress?: string;
@@ -69,4 +112,38 @@ export type ExtractedCaseFields = Partial<
 
 export interface ExtractResult {
   fields: ExtractedCaseFields;
+}
+
+export type BondLodgementAlertLevel =
+  | "none"
+  | "verify-record"
+  | "possible-non-lodgement"
+  | "authority-confirmed-missing";
+
+export interface BondLodgementAlert {
+  level: BondLodgementAlertLevel;
+  reasoningZh: string;
+  calculatedDeadline?: string;
+  deadlineBasis?: string;
+}
+
+export interface StatuteRef {
+  act: string;
+  section: string;
+}
+
+export interface AnalysisItem {
+  description: string;
+  amount?: number;
+  verdict: "unlawful" | "lawful" | "doubtful";
+  reasoning_zh: string;
+  statuteRefs: StatuteRef[];
+}
+
+export interface AnalysisResult {
+  items: AnalysisItem[];
+  bondLodgementAlert: BondLodgementAlert;
+  letterEn: string;
+  letterZhNotes: string;
+  winRate: "high" | "medium" | "low";
 }

@@ -4,7 +4,8 @@
 
 ## 范围
 
-产出 `data/legal/nsw.md` 与 `data/legal/vic.md`（或 JSON，以 prompt 注入友好为准），按州覆盖：
+产出 `data/legal/nsw.ts` 与 `data/legal/vic.ts`，并由
+`data/legal/index.ts` 汇总导出，按州覆盖：
 
 1. 押金存管义务与期限（NSW → RBO / VIC → RTBA）、未存管罚则
 2. 退租后 claim 流程与双方时限（含租客抢先发起 claim 的程序）
@@ -14,27 +15,57 @@
 6. condition report 规则（3-7 天窗口）
 7. 行动路线图所需机构信息：Fair Trading NSW / Consumer Affairs Victoria 投诉路径、联系方式
 
-## 数据结构（每条目）
+## 数据结构
+
+共享类型以 `data/legal/types.ts` 为准。法条和行动路线图资料分开：
+
+### 法条 `LegalClause`
 
 ```
-- topic: 主题标签（供 prompt 按纠纷类型筛选）
-- rule: 规则的中文概括（写给 prompt 和 UI 用）
-- statute: 法案名 + 条款号（如 Residential Tenancies Act 2010 (NSW) s 159）
+- id / state
+- topics: 与 CaseInput.disputeTypes 共用的主题标签；通用条目用 all
+- ruleZh: 规则的中文概括（写给 prompt 和 UI 用）
+- act: 法案名（如 Residential Tenancies Act 2010 (NSW)）
+- section: 条款号（如 s 159）
 - quote: 关键原文引用（英文）
-- source_url: 官方来源 URL
-- confidence: confirmed / 存疑（存疑条目不得进入维权信引用）
+- sourceUrl: 官方来源 URL
+- confidence: confirmed / unverified（存疑条目不得进入维权信引用）
+- checkedAt: 最后一次人工核对日期
 ```
 
-## 来源白名单（只允许这些）
+`topics` 只能使用：
+`cleaning / damage / early-termination / bond / rent-arrears / other / all`。
+
+### 行动路线图 `StateProcess`
+
+机构办理流程、费用、时限、联系方式不能伪装成法条，单独存为：
+
+```
+- id / state / stage / agency
+- summaryZh / stepsZh
+- feeZh / timeLimitZh / phone（按需）
+- sourceUrl
+- confidence
+- checkedAt
+```
+
+## 来源白名单与确认规则
 
 Fair Trading NSW · Consumer Affairs Victoria · RTBA · NCAT · VCAT · tenants.org.au · tenantsvic.org.au · 州立法数据库（legislation.nsw.gov.au / legislation.vic.gov.au）
 
+- `act + section + quote` 必须以州立法数据库原文为依据。
+- 机构流程、费用、期限优先使用对应政府机构、RTBA/RBO、NCAT/VCAT 页面。
+- tenants.org.au / tenantsvic.org.au 只作解释和交叉核对，不能单独支撑 `confirmed` 法条。
+- 白名单内找不到可靠原始依据的“常见判例口径”宁缺毋错：省略或标
+  `unverified`，本轮不扩展到新来源。
+
 ## 验收标准
 
-- [ ] 每条目有 statute + quote + source_url，三者缺一即标「存疑」
+- [ ] 每条法条有 act + section + quote + sourceUrl，任一缺失即标 `unverified`
 - [ ] 覆盖上述 7 类条目 × 2 州
 - [ ] 存疑条目显式标注且被 prompt 层排除在「具体法条编号」输出之外
-- [ ] **关键条款（存管期限、claim 时限、仲裁费用）由用户抽查确认**后方可标 confirmed
+- [ ] `stateProcesses` 覆盖 RBO/RTBA → Fair Trading/CAV → NCAT/VCAT 路线
+- [ ] **关键条款（存管期限、claim 时限、仲裁费用）由用户查看官方链接确认**后方可标 `confirmed`
 
 ## 不做
 

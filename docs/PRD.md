@@ -133,7 +133,10 @@
 
 ## 8. 法条资料需求（任务 2，最大翻车点 = 引用错法条）
 
-**来源必须官方**：Fair Trading NSW、Consumer Affairs Victoria、RTBA、NCAT/VCAT、tenants.org.au、tenantsvic.org.au。
+**来源白名单**：Fair Trading NSW、Consumer Affairs Victoria、RTBA、
+NCAT/VCAT、tenants.org.au、tenantsvic.org.au、NSW/VIC 州立法数据库。
+其中法案名称、条款号与英文原文以州立法数据库为准；租客组织网站只作解释和交叉核对，
+不能单独支撑已确认法条。
 
 按州覆盖以下条目：
 

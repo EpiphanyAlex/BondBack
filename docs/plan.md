@@ -26,7 +26,7 @@
 | AI SDK | 官方 `openai` npm 包，仅在 API route 使用 | key 不出服务端 |
 | 模型常量 | `lib/ai.ts`：`EXTRACT_MODEL='gpt-4o-mini'`、`ANALYZE_MODEL='gpt-4o'` | 若 key 可用更新旗舰，只改这一处 |
 | 结构化输出 | OpenAI structured outputs（JSON schema）+ zod 双重校验 | 校验失败→一次重试→降级提示 |
-| 状态管理 | React state + 单页向导内部 step 状态，无全局库 | 无跨页持久化需求 |
+| 状态管理 | React state + 根布局内轻量 `CaseSessionProvider` | 只跨 `/wizard → /result` 保留内存；不用全局库或浏览器持久化，刷新空结果页回向导 |
 | 图片处理 | 客户端 canvas 压缩（长边 ≤1568px，JPEG q0.8）→ base64 | 控 token 与请求体 |
 | lease PDF | `pdfjs-dist` 客户端渲染前 3 页为图片 → 走同一 vision 管线 | 服务端不解析 PDF |
 | 维权信 PDF | `jspdf` 纯文本英文信排版 | 英文信无需中文字体嵌入（体积陷阱） |
@@ -34,14 +34,19 @@
 | 限流 | API route 内存 Map 按 IP 计数 + 请求体上限 + 全局开关 env | 尽力而为，够比赛用 |
 | 超时 | 分析 route `export const maxDuration = 60` | 避免平台默认截断 |
 | 进度动画 | 非流式；前端按三板斧分阶段的假进度 + 真实完成跳转 | 流式结构化输出复杂度不值 |
-| 法条注入 | 按 `state` + `disputeTypes` 筛选 confirmed 条目拼进 system prompt | 无向量库（已决策） |
-| 路线图 | 州机构数据确定性渲染，LLM 只填个性化字段 | 费用/时限这类硬数据不过 LLM |
+| 法条注入 | 按 `state` + `disputeTypes` 筛选 `confirmed` 且 topic 匹配或为 `all` 的条目 | 无向量库（已决策） |
+| 路线图 | `stateProcesses` 州机构数据确定性渲染，LLM 只填个性化字段 | 费用/时限这类硬数据不过 LLM |
 
 ## 3. 模块开工要点
 
 - **00**：`pnpm create next-app` → 布局壳/页脚/路由占位 → push → Vercel 连 repo + env → 验部署。需要用户 `vercel login` 一次。
-- **01**：用 `deep-research` 技能按 01-legal-data.md 的条目清单 + 来源白名单发起调研（后台跑），产出后人工核对 statute/quote/URL 三件套，标 confidence；**用户抽查关键三项**。
-- **02**：先静态三步表单跑通（手填路径永远可用）→ 再接 `/api/extract` 预填 → 最后接 PDF 转图。写 UI 前先调 `frontend-design` 定视觉方向（一次性，覆盖 02/03/04）。
+- **01**：按 01-legal-data.md 的条目清单 + 来源白名单发起调研，产出
+  `legalClauses` 与 `stateProcesses`；人工核对 act/section/quote/URL，
+  标 confidence；**用户抽查关键三项**。
+- **02**：先按「基本情况 → 金额与扣款 → 证据与确认」跑通静态三步表单
+  （手填路径永远可用）→ 接 `CaseSessionProvider` → 再接 `/api/extract`
+  预填 → 最后接 PDF 转图。写 UI 前先调 `frontend-design`
+  定视觉方向（一次性，覆盖 02/03/04）。
 - **03**：先用假 `AnalysisResult` 把三件套 UI 全部画完 → 再接真 `/api/analyze` → prompt 里写死三板斧 + 诚实条款 + 「只引用注入法条」→ 最后 jspdf。
 - **04**：示例数据 = 手工打磨的一份 `CaseInput`+`AnalysisResult` 常量，直接喂 03 的组件；战报卡与首页收尾。
 - **05**：按 05-polish.md 清单逐项勾，微信实测放最前（发现问题留时间修）。

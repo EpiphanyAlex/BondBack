@@ -4,7 +4,8 @@
 
 ## 分析（`/api/analyze`，强模型）
 
-- 输入：`CaseInput` + 证据图片 + 按州注入的法条资料（`data/legal/`，只注入 confirmed 条目 + 与 disputeTypes 匹配的 topic）
+- 输入：`CaseInput`（含已分类证据）+ 按州注入的法条资料（`data/legal/`，
+  只注入 `confirmed` 且 `topics` 含对应 `disputeTypes` 或 `all` 的条目）
 - **三板斧写死进 prompt**：① 损伤是否原已存在（对照入住 condition report）② 合同是否真有此义务 ③ 是否属 fair wear and tear
 - **诚实条款写死进 prompt**：房东占理时必须判「✅合法，别争」并解释原因；拖欠租金抵扣默认倾向房东占理，除非证据显示例外
 - UI：进度动画（按三板斧分阶段展示分析步骤），**不是聊天气泡**；失败给体面降级提示 + 重试按钮
@@ -30,7 +31,10 @@ type AnalysisResult = {
 
 1. **胜算评估卡**：逐项 ✅/❌/⚠️ + 法条编号 + 中文解释；`bondAlert` 时顶部**红色警报**：「押金可能未合法存管，此为违法行为，是你最强谈判筹码」
 2. **英文维权信**：textarea 可编辑；「下载 PDF」（前端生成，英文正文，标准信件排版）；「复制全文」按钮（微信内置浏览器下载受限的兜底）；`bondAlert` 时信中必须包含未存管段落
-3. **行动路线图**：按州从 `data/legal/` 机构数据**确定性组装**（Fair Trading/CAV → NCAT/VCAT 路径、费用、时限），LLM 只填个性化建议；含邮件留证话术模板（「正如我们电话中沟通的…」）与抢先向 RTBA/RBO 发起 claim 的指引
+3. **行动路线图**：按州从 `data/legal/` 的 `stateProcesses`
+   **确定性组装**（Fair Trading/CAV → NCAT/VCAT 路径、费用、时限），
+   LLM 只填个性化建议；含邮件留证话术模板（「正如我们电话中沟通的…」）
+   与抢先向 RTBA/RBO 发起 claim 的指引
 
 ## 验收标准
 

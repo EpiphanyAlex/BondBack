@@ -1,13 +1,14 @@
 "use client";
 
 /**
- * 申诉信（03b §4）—— 第三幕「拿去发」的主角。
+ * 申诉信（03b §4）—— 第三幕「给房东发信」的主角。
  *
  * - `textarea` 可编辑，编辑**不回写分析结果**（信是给人发的，改了不影响逐项对照）
  * - 「复制全文」是微信内置浏览器下载受限时的兜底，必须存在且好用
- * - 中文对照解释拆成了同文件导出的 `LetterNotes`：它在 ≥lg 走信件**旁注栏**，
- *   而不是压在信下面。信原先挤在 380px 固定右栏里，英文正文一行只有三十几个字符，
- *   这一版把它放进整幅宽栏，旁注单独成栏（design-tokens §4.2）
+ * - 中文对照解释**已从界面撤掉**（2026-07-26，产品决定）：这封信是要原样发出去的
+ *   成品，旁边挂一份六百字的中文注解，会让人以为还得先读懂它才能发。
+ *   `AnalysisResult.letterZhNotes` 仍由 `lib/letter.ts` 确定性生成（零 token 成本），
+ *   只是不再渲染 —— 要恢复的话把它接回这一幕即可
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -138,49 +139,6 @@ export function AppealLetter({
         </p>
       </div>
     </section>
-  );
-}
-
-/**
- * 中文对照解释 —— ≥lg 站在信件右侧的旁注栏里（手机上顺序不变，接在信后面）。
- * **不进 PDF**：PDF 是要发给房东的，中文注解是给你自己看的。
- *
- * **默认折叠**：它是全页最长的一块（示例案例里 636 字），而且是**查阅型**内容 ——
- * 你要么在改某一段时来对一下，要么根本不看。常开着就是把整页最大的一堵字墙
- * 摆在最显眼的位置。用原生 `<details>`：零 JS、键盘可达、不需要管 reduced-motion。
- */
-export function LetterNotes({
-  notes,
-  className,
-}: {
-  notes: string;
-  className?: string;
-}) {
-  return (
-    <details
-      className={cx(
-        "group border-l-[3px] border-l-alert-verify bg-card px-5 py-4 md:px-7",
-        className,
-      )}
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
-        <span className="min-w-0 flex-1">
-          <span className="block text-section font-bold text-ink">
-            中文对照解释
-          </span>
-          <span className="mt-1 block text-caption text-muted">
-            逐段说明这封信在争什么
-          </span>
-        </span>
-        <span className="shrink-0 font-mono text-micro text-faint">
-          不进 PDF
-        </span>
-        <Chevron />
-      </summary>
-      <p className="mt-4 whitespace-pre-line border-t border-line pt-4 text-label text-ink">
-        {notes}
-      </p>
-    </details>
   );
 }
 

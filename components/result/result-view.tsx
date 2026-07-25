@@ -11,7 +11,7 @@
  *   第一幕 · 判决    整幅墨黑横幅：先说一句人话的结论，再上三色条与最大的那个数
  *   第二幕 · 逐笔    **横向吸附卡带，一次只看一笔** —— 三张卡是并列的三个判决，
  *                    不是递进的三段论述，竖着摞起来第三张要滚七八屏才见得到
- *   第三幕 · 拿去发  信是成品，中文对照与邮件话术是它的两件附件（默认折叠）
+ *   第三幕 · 发信    信是成品，邮件留证话术是它的附件（默认折叠）
  *   第四幕 · 路线    存管预警是前置检查（全幅横幅），机构按**阶段**分三栏
  *   尾   · 证据档   它是索引，折叠收尾，不占视线
  *
@@ -26,7 +26,7 @@ import type { AnalysisResult, CaseInput, EvidenceFact } from "@/lib/types";
 
 import { ActRail, type ActRailItem } from "./act-rail";
 import { ActionRoadmap } from "./action-roadmap";
-import { AppealLetter, LetterNotes } from "./appeal-letter";
+import { AppealLetter } from "./appeal-letter";
 import { ComparisonStrip } from "./comparison-strip";
 import { EmailScript } from "./email-script";
 import { EvidenceDossier } from "./evidence-dossier";
@@ -37,7 +37,7 @@ import { cx, scrollToElement, usedFactIdsOf } from "./utils";
 const ACTS: ActRailItem[] = [
   { id: "result-verdict", label: "判决" },
   { id: "result-cards", label: "逐笔" },
-  { id: "result-letter", label: "拿去发" },
+  { id: "result-letter", label: "发信" },
   { id: "result-roadmap", label: "路线" },
   { id: "result-dossier", label: "证据档" },
 ];
@@ -163,25 +163,21 @@ export function ResultView({
             />
           </section>
 
-          {/* ── 第三幕 · 拿去发 ── 信是成品，底下两条是它的附件 ── */}
+          {/* ── 第三幕 · 给房东发信 ── 信是成品，底下是它的附件 ── */}
           <section
             ref={letterRef}
             id="result-letter"
             className="mt-11 scroll-mt-4 border-t border-line pt-9 md:mt-14"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-              <h2 className="h-shout text-title text-ink">拿去发</h2>
+              <h2 className="h-shout text-title text-ink">给房东发信</h2>
               <p className="font-mono text-micro text-faint">
-                英文正文 · 中文对照 · 邮件模板
+                英文正文 · 邮件模板 · 发出前自查
               </p>
             </div>
 
             <div className="mt-5 flex flex-col gap-4 lg:max-w-[840px]">
               <AppealLetter letterEn={analysis.letterEn} />
-
-              {analysis.letterZhNotes ? (
-                <LetterNotes notes={analysis.letterZhNotes} />
-              ) : null}
 
               <EmailScript
                 state={caseInput.state}

@@ -4,7 +4,7 @@
 
 | # | 模块 | 对应任务 | 预算 | 依赖 | 状态 |
 |---|------|----------|------|------|------|
-| 00 | [脚手架与首次部署](./00-foundation.md) | 任务 1 | 2h | 无 | ✅ 完成（<https://bondback-six.vercel.app>；余两项一次性配置：Vercel env `OPENAI_API_KEY`、GitHub 连接开自动部署） |
+| 00 | [脚手架与首次部署](./00-foundation.md) | 任务 1 | 2h | 无 | ✅ 完成（<https://bond-back-yanzhuo-lius-projects.vercel.app>；GitHub 自动部署已连、`OPENAI_API_KEY` 已配、Deployment Protection 已关。旧的 `bondback-six.vercel.app` 在另一个 team 下，待新链接稳定后废弃） |
 | 01 | [NSW/VIC 法条资料](./01-legal-data.md) | 任务 2 | 3h | 无（可与 02 并行） | ✅ 完成（2026-07-24 关键条款已复核） |
 | 02 | [三步向导 + 证据上传 + 自动预填](./02-wizard.md) | 任务 3 | 5h | 00 | ✅ 完成（存管分级规则已按验收场景自测通过；自动预填需 Vercel 配 `OPENAI_API_KEY` 后在部署环境复验） |
 | 03 | [AI 分析 + 三件套 + PDF](./03-analysis-output.md) | 任务 4 | 5h | 01、02 | 待开工 |

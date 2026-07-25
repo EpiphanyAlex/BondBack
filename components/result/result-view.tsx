@@ -65,6 +65,8 @@ export interface ResultViewProps {
   showSampleDocuments?: boolean;
   /** 顶部插槽：/result 用它放两段进度摘要 */
   header?: ReactNode;
+  /** 示例预览时顶上的一句「均为虚构」（军规：示例必须标虚构）*/
+  sampleNote?: string;
   className?: string;
 }
 
@@ -73,6 +75,7 @@ export function ResultView({
   analysis,
   showSampleDocuments = false,
   header,
+  sampleNote,
   className,
 }: ResultViewProps) {
   const docRef = useRef<ConditionReportHandle>(null);
@@ -137,6 +140,11 @@ export function ResultView({
 
   return (
     <div className={cx("pb-10", className)}>
+      {sampleNote ? (
+        <p className={cx(ACT, "pt-4 font-mono text-caption text-faint")}>
+          {sampleNote}
+        </p>
+      ) : null}
       {header ? <div className={cx(ACT, "pt-4 pb-4")}>{header}</div> : null}
 
       {/* ── 第一幕 · 判决 ── 自带全幅底色，所以不进 ACT 容器 ── */}

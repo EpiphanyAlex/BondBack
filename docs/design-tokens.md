@@ -1,47 +1,78 @@
 # Design Tokens 与响应式约束
 
 > **这是视觉的唯一事实源。** 写任何 UI 前先读这一页。母文档见 `docs/PRD.md`。
-> 一句话规矩：**Tailwind 已经有的（间距、圆角、阴影）直接用官方的，不重造；这里只定义 Tailwind 给不了的三层——排版尺度、语义色、动效。**
+> 一句话规矩：**Tailwind 已经有的（间距、阴影）直接用官方的，不重造；这里只定义 Tailwind 给不了的四层——排版尺度、语义色、字面分工、动效。**
 
-## 0. 三条硬规矩
+> **2026-07-25 · 「江湖战报」改版**：全站视觉换代（设计稿 `押金侠 · 江湖战报.dc.html`）。
+> 三处翻新：① 色板由「墨蓝 + 冷灰纸」改为**墨黑 + 米白 + 朱红**；② **圆角一律为 0**；
+> ③ 字面分成四种、各司其职。下面各节已是新值，旧值只在「收编对照」里留痕。
 
-1. **禁止任意字号**：不写 `text-[15px]`，只用下面 7 档。
-2. **禁止硬编码颜色**：不写 `#b93a27` 或 `text-red-600`，只用语义 token。
+## 0. 四条硬规矩
+
+1. **禁止任意字号**：不写 `text-[15px]`，只用下面 8 档（钱数另有 `num-*` 一组）。
+2. **禁止硬编码颜色**：不写 `#e23d28` 或 `text-red-600`，只用语义 token。
 3. **只有 `md:` 和 `lg:` 两个断点**：`sm:` / `xl:` / `2xl:` 已在 `@theme` 中删除，写了也不会生效。
+4. **不写圆角**：`--radius-*` 已全部归零，`rounded-xl` 写了也是方角。唯一的圆是卷轴小圆点，用 `rounded-full`（它不走 `--radius-*`）。
 
-违反项由 `pnpm check:tokens` 扫出来。
+违反项由 `pnpm check:tokens` 扫出来（圆角靠归零硬保证，不进扫描）。
 
 ---
 
-## 1. 排版尺度（7 档）
+## 1. 排版尺度（8 档 + 钱数 4 档）
 
 大字号用 `clamp()` **流体缩放**——一个类同时管好手机和桌面，不需要写 `md:` 前缀，也就不可能漏。正文以下**固定不缩放**：中文字形复杂不耐小号，且 `globals.css` 已为 iOS 输入框自动放大锁死 `max(16px, 1rem)`。
 
 | Token | 值 | 手机 → 桌面 | 用途 |
 |---|---|---|---|
-| `text-hero` | `clamp(1.75rem, 1.3rem + 2.2vw, 3rem)` | 28 → 48px | 首页大标题、结果页「可争议」金额 |
-| `text-title` | `clamp(1.375rem, 1.15rem + 1.1vw, 2rem)` | 22 → 32px | 页面标题、账本条金额、战报卡主数字 |
-| `text-section` | `clamp(1.0625rem, 1rem + 0.4vw, 1.25rem)` | 17 → 20px | 卡片标题、区块标题 |
+| `text-hero` | `clamp(2.5rem, 1.55rem + 4.2vw, 4.5rem)` | 40 → 72px | 首页第 1 幕的合体式标题，全站只此一处 |
+| `text-display` | `clamp(1.875rem, 1.3rem + 2.5vw, 2.75rem)` | 30 → 44px | 每一幕的喊话标题（「三笔扣款，两笔站不住。」）|
+| `text-title` | `clamp(1.25rem, 1.05rem + 1vw, 1.75rem)` | 20 → 28px | 区块标题、对照卡标题 |
+| `text-section` | `clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem)` | 17 → 19px | 强调正文、小标题 |
 | `text-body` | `1rem` | 16px 固定 | 正文、按钮、输入框 |
-| `text-label` | `0.875rem` | 14px 固定 | 表单标签、次要正文 |
+| `text-label` | `0.9375rem` | 15px 固定 | 次要正文、解释句 |
 | `text-caption` | `0.8125rem` | 13px 固定 | 辅助说明、脚注 |
-| `text-micro` | `0.6875rem` + `0.14em` 字距 | 11px 固定 | 全大写小标签（「证据」「合同」「法条」） |
+| `text-micro` | `0.6875rem` + `0.16em` 字距 | 11px 固定 | 全大写小标签（「证据」「STEP 02」「战报 · 实时」）|
+
+**钱数单开一组**（只配 `font-number` 用）：钱是本产品的主角，尺寸跨度比正文大得多，硬塞进上面 8 档会把尺度撑坏。
+
+| Token | 手机 → 桌面 | 用途 |
+|---|---|---|
+| `text-num-xl` | 56 → 112px | 结果页「可争议」，整页最大的一个数字 |
+| `text-num-lg` | 40 → 76px | 向导战报栏「你要争的钱」 |
+| `text-num-md` | 40 → 64px | 对照卡头的单笔金额 |
+| `text-num-sm` | 22 → 28px | 明细行、页脚里的行内金额 |
 
 ### 旧值收编对照（改现有代码时照这张表）
 
 | 原写法 | 改成 |
 |---|---|
-| `text-[11px]`（14 处） | `text-micro` |
-| `text-[12px]` / `text-xs`（18 处） | `text-caption` |
-| `text-[13px]`（3 处） | `text-caption` |
-| `text-sm`（22 处） | `text-label` |
-| `text-[15px]`（4 处） | `text-body` |
-| `text-[26px]` / `text-[27px]` | `text-title` |
-| `text-2xl` | `text-title` |
-| `text-4xl` | `text-hero` |
+| `text-[11px]` | `text-micro` |
+| `text-[12px]` / `text-xs` / `text-[13px]` | `text-caption` |
+| `text-sm` | `text-label` |
+| `text-[15px]` | `text-body` |
+| `text-[26px]` / `text-[27px]` / `text-2xl` | `text-title` |
+| `text-4xl` | `text-hero`（幕标题则是 `text-display`）|
 | `tracking-[0.14em]` / `[0.18em]` | 已内建进 `text-micro`，不用再写 |
+| 任何 `rounded-*`（除 `rounded-full`）| 删掉，已归零 |
 
-> 12px 与 15px 被合并掉是有意的：尺度的价值就在于**有限**。12px 中文在手机上本来就偏小。
+> 12px 与 14px 被合并掉是有意的：尺度的价值就在于**有限**。
+
+---
+
+## 1.5 字面分工（四种，谁都不许串岗）
+
+| 类 | 字族 | 只用来排 |
+|---|---|---|
+| `font-display` + `.h-shout` | Noto Serif SC 900 → Songti SC / SimSun | **标题喊话**。宋体 900 是这一版的签名 |
+| `font-number` | Anton | **钱数与序号**，`$1,306` / `01` / `7 天` |
+| `font-mono` | IBM Plex Mono | **「码」**：法条编号 `s 51(3)(c)`、日期、押金号、全大写小标签 |
+| `font-sans`（默认）| Noto Sans SC → PingFang SC | 正文与解释 |
+
+> **为什么中文字体不走 `next/font`**：next/font 的 Google 字体清单里 Noto Sans SC / Noto Serif SC
+> 都只暴露 `latin / cyrillic / vietnamese` 子集，**没有 `chinese-simplified` 可选**，声明了也不含汉字。
+> 所以正文汉字交给系统字（PingFang SC / 微软雅黑），标题的思源宋体走 `app/layout.tsx` 里那条
+> Google `css2` 链接（汉字按 unicode-range 切块，只下用到的那几块），拉不到就退到 Songti SC / SimSun。
+> Anton 与 IBM Plex Mono 只有拉丁字形，正常自托管。
 
 ---
 
@@ -49,19 +80,30 @@
 
 底层材质色（`--ink` / `--seal` / `--jade` / `--gold` …）**不再直接用于业务组件**，一律通过语义别名引用。这样三个并行开发的模块不会各挑一个自己觉得对的红色。
 
+**全站只有两种底色：墨黑 `#14110F` 与米白 `#F6F1E6`。** 朱红只给「不合法 / 主行动」，金只给钱数，石青只给「合法别争」。
+
+| 材质色 | 值 | 是什么 |
+|---|---|---|
+| `--ink` | `#14110F` | 墨黑，深色面 |
+| `--paper` | `#F6F1E6` | 米白，唯一的浅色底 |
+| `--seal` | `#E23D28` | 朱红，全站最强的一个颜色 |
+| `--gold-bright` | `#E9B44C` | 金，只给钱数且只在深底 |
+| `--jade-solid` | `#6E8F8C` | 石青 |
+
 ### 2.1 结论三档
 
-红 / 金 / 绿三色**全部让给结论**——这是无需学习的交通灯语义。
+红 / 金 / 石青三色**全部让给结论**——这是无需学习的交通灯语义。每档四个出口：
 
-| Token | 底层 | 用法 | 配套图标 |
-|---|---|---|---|
-| `verdict-unlawful` | `--seal` `#b93a27` | ❌ 不合法 | ✕ 实心圆 |
-| `verdict-doubtful` | `--gold` `#9c650f` | ⚠️ 待举证 / 存疑 | ！三角 |
-| `verdict-lawful` | `--jade` `#1c6b5d` | ✅ 合法，别争 | ✓ 实心圆 |
+| Token 后缀 | 不合法 | 待举证 | 合法，别争 | 用在哪 |
+|---|---|---|---|---|
+| （无，浅底文字）| `#E23D28` | `#9A6A10` | `#4A6B68` | 米白面上的文字 |
+| `-fill` | `#E23D28` | `#E9B44C` | `#6E8F8C` | 块面（对照卡头、三色条）|
+| `-wash` | `#FBEAE7` | `#FDF3E0` | `#E8EEEC` | 浅色衬底 |
+| `-on-dark` | `#F08B78` | `#E9B44C` | `#9DBAB6` | 墨黑面上的文字与图例 |
 
-- 每档配 `-wash` 底色（`verdict-unlawful-wash` 等）用于卡片浅色衬底
-- 每档配 `-on-dark` 变体，专用于深色账本条上的文字与图例（浅底色值在墨蓝上对比度不足）
-- **不得只靠颜色传达结论**：图标与中文标签必须同时在场（色觉障碍可及性，成本为零）
+> 浅底文字与块面**不是同一个值**：金 `#E9B44C` 当块面很好看，当文字在米白上只有 1.9:1。
+> 配套图标：✕ 实心圆 / ！三角 / ✓ 实心圆。
+> **不得只靠颜色传达结论**：图标与中文标签必须同时在场（色觉障碍可及性，成本为零）
 
 三档结论有两个出口，都在 `components/result/verdict.tsx`，别处不要再画第三个：
 
@@ -82,10 +124,10 @@
 
 | Token | 值 | 用法 |
 |---|---|---|
-| `amount` | `--ink` | 浅底上的一切金额，配 `.tnum` + `font-semibold` |
-| `amount-hero` | `--gold-bright` `#e8a33d` | **仅限深色账本条上**的主数字（可争议总额、争取金额） |
+| `amount` | `--ink` | 浅底上的一切金额，配 `font-number` |
+| `amount-hero` | `--gold-bright` `#E9B44C` | **仅限墨黑面上**的主数字（可争议总额、战报栏金额） |
 
-> ⚠️ `amount-hero` 绝不可用在浅色纸面上：`#e8a33d` 对 `#f4f6f8` 只有 **1.99:1**，连大字号的 3:1 都不到。它对墨蓝底是 **7.58:1**，非常安全。**所以「可争议 $1,120」这个主数字必须坐在深色账本条上**——这与既有视觉方向「全站唯一的深色面是账本条，它是记忆点」一致，`components/wizard/ledger-bar.tsx` 已经是这个模式，照抄即可。
+> ⚠️ `amount-hero` 绝不可用在米白纸面上：`#E9B44C` 对 `#F6F1E6` 只有 **1.9:1**，连大字号的 3:1 都不到。它对墨黑底则很安全。**所以「可争议 $1,120」这个主数字必须坐在墨黑面上**——向导的战报栏、结果页的判决横幅都是这个模式。
 
 ### 2.3 状态与提示
 
@@ -195,93 +237,19 @@ Tailwind v4 的 `duration-*` 不走主题，所以**时长在 `:root` 定义为�
 
 ## 5. `@theme` 落地代码
 
-写进 `app/globals.css`（材质色保留在 `:root`，语义层在 `@theme inline` 引用它们）：
+已写进 `app/globals.css`（材质色留在 `:root`，语义层在 `@theme inline` 引用它们）。
+**那份文件就是本节的实现，改 token 请直接改它，不要在这里复制第二份值** ——
+上一版这里贴了整块 CSS，改完两边不同步，反而多出一个假的事实源。
 
-```css
-:root {
-  color-scheme: light;
+要点只有四条，其余照 `globals.css` 的注释读：
 
-  /* ── 材质色（不直接用于业务组件）── */
-  --ink: #12212f;
-  --ink-soft: #24384b;
-  --paper: #f4f6f8;
-  --card: #ffffff;
-  --line: #dfe4ea;
-  --muted: #5f6d7e;
-  --gold: #9c650f;
-  --gold-bright: #e8a33d;
-  --gold-wash: #fdf3e0;
-  --seal: #b93a27;
-  --seal-wash: #fbeeec;
-  --seal-on-dark: #f0806b;
-  --jade: #1c6b5d;
-  --jade-wash: #e9f3f0;
-  --jade-on-dark: #5fbfa8;
+- `--radius-*` 全部设 `0`（含 `xs`→`4xl`），所以 `rounded-lg` 之类写了也是方角；`rounded-full` 走 Tailwind 内建常量，不受影响
+- `--breakpoint-sm|xl|2xl: initial` 删掉三个断点
+- 字面四种：`--font-display`（宋体 900）/ `--font-number`（Anton）/ `--font-mono`（Plex Mono）/ `--font-sans`
+- 结论三档各四个出口：无后缀 / `-fill` / `-wash` / `-on-dark`
 
-  /* ── 动效 ── */
-  --duration-quick: 150ms;
-  --duration-settle: 280ms;
-  --duration-sweep: 1600ms;
-  --duration-beat: 1200ms;
-}
-
-@theme inline {
-  /* 断点：删掉三个，只留 md / lg */
-  --breakpoint-sm: initial;
-  --breakpoint-xl: initial;
-  --breakpoint-2xl: initial;
-
-  /* 排版 */
-  --text-hero: clamp(1.75rem, 1.3rem + 2.2vw, 3rem);
-  --text-hero--line-height: 1.1;
-  --text-hero--font-weight: 800;
-  --text-title: clamp(1.375rem, 1.15rem + 1.1vw, 2rem);
-  --text-title--line-height: 1.2;
-  --text-title--font-weight: 700;
-  --text-section: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
-  --text-section--line-height: 1.35;
-  --text-section--font-weight: 600;
-  --text-body: 1rem;
-  --text-body--line-height: 1.6;
-  --text-label: 0.875rem;
-  --text-label--line-height: 1.5;
-  --text-caption: 0.8125rem;
-  --text-caption--line-height: 1.5;
-  --text-micro: 0.6875rem;
-  --text-micro--line-height: 1.4;
-  --text-micro--letter-spacing: 0.14em;
-
-  /* 语义色：结论 */
-  --color-verdict-unlawful: var(--seal);
-  --color-verdict-unlawful-wash: var(--seal-wash);
-  --color-verdict-unlawful-on-dark: var(--seal-on-dark);
-  --color-verdict-doubtful: var(--gold);
-  --color-verdict-doubtful-wash: var(--gold-wash);
-  --color-verdict-doubtful-on-dark: var(--gold-bright);
-  --color-verdict-lawful: var(--jade);
-  --color-verdict-lawful-wash: var(--jade-wash);
-  --color-verdict-lawful-on-dark: var(--jade-on-dark);
-
-  /* 语义色：金额与状态 */
-  --color-amount: var(--ink);
-  --color-amount-hero: var(--gold-bright);
-  --color-alert-verify: var(--gold);
-  --color-alert-risk: var(--seal);
-  --color-evidence-used: var(--jade);
-  --color-evidence-unused: var(--muted);
-
-  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
-
-  /* 既有材质色仍暴露给布局用（bg-ink / border-line 等） */
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-paper: var(--paper);
-  --color-card: var(--card);
-  --color-line: var(--line);
-  --color-muted: var(--muted);
-  --color-gold-bright: var(--gold-bright);
-}
-```
+`globals.css` 里另有三个跨页面复用的类：`.h-shout`（宋体 900 喊话）、
+`.strip` + `.snap`（结果页横向吸附卡带）、`.strike-in`（首页「认栽」的删除线划入）。
 
 ---
 

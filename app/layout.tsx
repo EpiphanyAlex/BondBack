@@ -1,27 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist, IBM_Plex_Mono } from "next/font/google";
+import { Anton, IBM_Plex_Mono, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { CaseSessionProvider } from "@/lib/case-session";
 import { SITE_URL } from "@/lib/site";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * 正文体。只声明 latin —— next/font 的 Google 字体清单里 Noto Sans SC
+ * 根本没有 `chinese-simplified` 这个子集可选，写了也不含汉字。
+ * 所以它只负责拉丁字母与数字，汉字由 `--font-sans` 字族链里的 PingFang SC 接手。
+ */
+const notoSansSc = Noto_Sans_SC({
+  variable: "--font-noto-sans-sc",
   subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
 });
 
-/** 展示体：只给大标题与钱数 */
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+/** 钱数专用。只有 latin 一档，正好只用来排 `$` 和阿拉伯数字（设计稿 §字阶）*/
+const anton = Anton({
+  variable: "--font-anton",
   subsets: ["latin"],
-  weight: ["600", "800"],
+  weight: ["400"],
 });
 
 /** 等宽体：法条编号、日期这类「代号」 */
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
 });
 
 /**
@@ -77,7 +83,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#12212f", // token-ok: --ink 的字面值，浏览器 chrome 取不到 CSS 变量
+  themeColor: "#14110f", // token-ok: --ink 的字面值，浏览器 chrome 取不到 CSS 变量
   /**
    * 锁定浅色（design-tokens.md §4.4）：微信安卓版会对未声明适配的网页强制反色，
    * 会把「墨蓝 + 金 + 印章红」整套配色毁掉，而用户全都在微信里打开链接。
@@ -94,8 +100,26 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${geistSans.variable} ${bricolage.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${notoSansSc.variable} ${anton.variable} ${plexMono.variable} h-full antialiased`}
     >
+      {/*
+        思源宋体 900 是这一版标题的签名字面，但 next/font 拿不到它的汉字子集，
+        只能走 Google 的 css2（汉字按 unicode-range 切成上百个小块，浏览器只下
+        标题里真正用到的那几块）。拉不到也不会坏：`--font-display` 后面还挂着
+        Songti SC / SimSun 的系统宋体链。
+      */}
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&display=swap"
+        />
+      </head>
       <body className="flex min-h-dvh flex-col bg-paper text-ink">
         {/* 会话内存挂在根布局，/wizard → /result 之间不丢；刷新即清空 */}
         <CaseSessionProvider>

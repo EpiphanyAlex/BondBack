@@ -272,7 +272,10 @@ pnpm check:tokens
 **唯一逃生舱**是行尾 `// token-ok: 理由`，只给拿不到 CSS 变量的非 UI 层（canvas 填充色、
 浏览器 chrome 色）——目前全项目只有 3 处。整行注释不参与扫描。
 
-### 7.2 契约冻结（**冻结后任何 agent 不得再改这两个文件**）
+### 7.2 契约冻结（**冻结已于 2026-07-25 解除**）
+
+> 冻结只为并行扇出期间三个 agent 不打架，扇出已结束。`lib/types.ts` / `lib/ai.ts` 现在要改就改，改完同步四个模块的消费点即可 —— **别因为这里写过「冻结」就绕着走、在别处复制一份类型**。
+
 
 - [x] `lib/types.ts`：`EvidenceFact`、`EvidenceRef`、`StatuteRef`（加 `quote`/`sourceUrl`）、`AnalysisChecks`、`AnalysisItem.{checks,evidenceRefs,disputableAmount,paragraphEn}`、`AnalysisResult.{mode,facts,ledger}`、`AnalysisLedger`、`ReplayBeat` 全部就位
 - [x] `EVIDENCE_KINDS` 加 `deduction-notice`（02-wizard.md 的契约里写了它，代码里原先没有）

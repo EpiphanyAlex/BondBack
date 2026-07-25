@@ -94,20 +94,18 @@ export function EmailScript({
   return (
     <section
       id={id}
-      className={cx("rounded-2xl border border-line bg-card p-4 md:p-5", className)}
+      className={cx("border-l-[3px] border-l-line bg-card px-5 py-4 md:px-7", className)}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3 className="text-section text-ink">邮件留证话术</h3>
-        <span className="font-mono text-micro uppercase text-muted">
-          {state} 通用
-        </span>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h3 className="text-section font-bold text-ink">邮件留证话术</h3>
+        <span className="font-mono text-micro text-faint">{state} 通用</span>
       </div>
 
       <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
         {TIPS.map((tip) => (
           <li
             key={tip}
-            className="flex items-baseline gap-1.5 text-label leading-relaxed text-ink"
+            className="flex items-baseline gap-1.5 text-label text-ink"
           >
             <span aria-hidden="true" className="text-muted">
               ·
@@ -121,7 +119,7 @@ export function EmailScript({
         <button
           type="button"
           onClick={handleCopy}
-          className="rounded-xl bg-ink px-4 py-2.5 text-label font-semibold text-white transition active:scale-[0.99]"
+          className="bg-ink px-5 py-2.5 text-label font-bold text-paper transition active:scale-[0.99]"
         >
           {copied ? "已复制" : "复制邮件模板"}
         </button>
@@ -136,7 +134,7 @@ export function EmailScript({
             <span className="hidden group-open:inline">收起模板</span>
             <Chevron />
           </summary>
-          <pre className="mt-2.5 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl bg-paper px-3.5 py-3 font-mono text-caption leading-relaxed text-ink">
+          <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap bg-paper px-4 py-3.5 font-mono text-caption leading-loose text-ink">
             {template}
           </pre>
         </details>

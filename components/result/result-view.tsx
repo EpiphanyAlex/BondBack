@@ -6,51 +6,41 @@
  * 04b 会整片复用它（`/sample` 重放结束停在这一页），所以数据只从 props 进来；
  * 唯一的内部状态是「哪一行证据刚被点开」这类纯 UI 交互。
  *
- * ## 为什么从「两栏」改成「四幕」
+ * ## 四幕串在一根卷轴上（「江湖战报」稿 §04）
  *
- * 上一版是左 1fr / 右 380px sticky，右栏里竖着堆申诉信 + 行动路线 + 证据档。
- * 问题是这三样**根本不是一类东西**，阅读方式各不相同：信是要通读要发出去的
- * **成品**，路线是跨周执行的**流程**，证据档是随手回查的**索引**。把它们焊进
- * 同一根 380px 窄柱，等于让整页最需要宽度的内容拿到最少的宽度 —— 英文信一行
- * 只剩三十几个字符，行动路线的机构卡只有 310px 可用。
+ *   第一幕 · 判决    整幅墨黑横幅：先说一句人话的结论，再上三色条与最大的那个数
+ *   第二幕 · 逐笔    **横向吸附卡带，一次只看一笔** —— 三张卡是并列的三个判决，
+ *                    不是递进的三段论述，竖着摞起来第三张要滚七八屏才见得到
+ *   第三幕 · 拿去发  信是成品，中文对照与邮件话术是它的两件附件（默认折叠）
+ *   第四幕 · 路线    存管预警是前置检查（全幅横幅），机构按**阶段**分三栏
+ *   尾   · 证据档   它是索引，折叠收尾，不占视线
  *
- * 所以这一版按**阅读方式**切幕，而不是按栏切：
- *
- *   第一幕 · 判决      全幅墨蓝横条（唯一深色面），≥lg 三分：索扣 │ 三色条 │ 可争议
- *   第二幕 · 逐项对照   760px 阅读栏 + 右侧 7rem 页边，序号与结论印章落在页边里
- *   第三幕 · 拿去发     申诉信 660px（英文约 70 字符/行）│ 420px 旁注：中文对照 + 邮件话术
- *   第四幕 · 行动路线   存管预警全幅横幅 + 三级机构横排
- *   证据档              折叠收尾（它是索引，不该占据视线）
- *
- * 结构变化一律只发生在 `lg:`（design-tokens §4.1：`md:` 只许加宽加间距）。
- * 手机堆回单列，顺序不变 —— DOM 顺序本身就是手机顺序。
+ * ≥lg 左边多一根 140px 的卷轴指示现在读到哪一幕；结构变化一律只发生在 `lg:`
+ * （design-tokens §4.1）。手机堆回单列，顺序不变 —— DOM 顺序本身就是手机顺序。
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import type { ConditionReportHandle } from "@/components/evidence/condition-report-doc";
-import type {
-  AnalysisResult,
-  CaseInput,
-  EvidenceFact,
-} from "@/lib/types";
+import type { AnalysisResult, CaseInput, EvidenceFact } from "@/lib/types";
 
+import { ActRail, type ActRailItem } from "./act-rail";
 import { ActionRoadmap } from "./action-roadmap";
 import { AppealLetter, LetterNotes } from "./appeal-letter";
-import { ComparisonCard } from "./comparison-card";
+import { ComparisonStrip } from "./comparison-strip";
 import { EmailScript } from "./email-script";
 import { EvidenceDossier } from "./evidence-dossier";
-import { HeadlineLedger, type HeadlineReason } from "./headline-ledger";
-import {
-  cx,
-  leadClauseZh,
-  scrollToElement,
-  shortLabelZh,
-  usedFactIdsOf,
-} from "./utils";
+import { HeadlineLedger } from "./headline-ledger";
+import { cx, scrollToElement, usedFactIdsOf } from "./utils";
 
-/** 每一幕共用的容器：同一个最大宽度 + 同一组内边距，四幕左边缘才对得齐。 */
-const ACT = "mx-auto w-full max-w-[1152px] px-4 md:px-6";
+/** 四幕 + 收尾，卷轴上的五个点。id 同时是锚点与滚动监听的目标。 */
+const ACTS: ActRailItem[] = [
+  { id: "result-verdict", label: "判决" },
+  { id: "result-cards", label: "逐笔" },
+  { id: "result-letter", label: "拿去发" },
+  { id: "result-roadmap", label: "路线" },
+  { id: "result-dossier", label: "证据档" },
+];
 
 /** 定位原件时最多等几帧 —— 证据档刚展开，组件要一帧才挂上。 */
 const LOCATE_FRAME_BUDGET = 20;
@@ -80,7 +70,7 @@ export function ResultView({
 }: ResultViewProps) {
   const docRef = useRef<ConditionReportHandle>(null);
   const cardsRef = useRef<HTMLElement>(null);
-  const letterRef = useRef<HTMLDivElement>(null);
+  const letterRef = useRef<HTMLElement>(null);
   const dossierRef = useRef<HTMLDivElement>(null);
 
   const [dossierOpen, setDossierOpen] = useState(false);
@@ -129,139 +119,118 @@ export function ResultView({
     return () => cancelAnimationFrame(raf);
   }, [pending]);
 
-  const reasons: HeadlineReason[] = analysis.items.slice(0, 3).map((item) => ({
-    key: item.description,
-    labelZh: shortLabelZh(item.description),
-    verdict: item.verdict,
-    lineZh: leadClauseZh(item.reasoningZh),
-  }));
-
   const usedFactIds = usedFactIdsOf(analysis.items);
 
   return (
-    <div className={cx("pb-10", className)}>
+    <div className={cx("pb-14", className)}>
       {sampleNote ? (
-        <p className={cx(ACT, "pt-4 font-mono text-caption text-faint")}>
+        <p className="mx-auto w-full max-w-[1152px] px-4 pt-4 font-mono text-caption text-faint md:px-6">
           {sampleNote}
         </p>
       ) : null}
-      {header ? <div className={cx(ACT, "pt-4 pb-4")}>{header}</div> : null}
 
-      {/* ── 第一幕 · 判决 ── 自带全幅底色，所以不进 ACT 容器 ── */}
-      <HeadlineLedger
-        bondAmount={caseInput.bondAmount}
-        ledger={analysis.ledger}
-        mode={analysis.mode}
-        reasons={reasons}
-        stateLabel={caseInput.state}
-        onSeeDetails={() => scrollToElement(cardsRef.current)}
-        onWriteLetter={() => scrollToElement(letterRef.current)}
-      />
-
-      {/* ── 第二幕 · 逐项对照 ── 产品的差异化就长在这一幕 ── */}
-      <section
-        ref={cardsRef}
-        id="result-cards"
-        className={cx(ACT, "scroll-mt-4 pt-8 md:pt-10")}
-      >
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-title text-ink">
-            逐项对照 · {analysis.items.length} 笔
-          </h2>
-          <p className="font-mono text-micro uppercase text-muted">
-            扣款 ↔ 证据 ↔ 合同 ↔ 法条
-          </p>
-        </div>
-
-        <ol className="mt-4 flex flex-col gap-4 lg:gap-5">
-          {analysis.items.map((item, index) => (
-            <li key={`${item.description}-${index}`}>
-              <ComparisonCard
-                item={item}
-                ordinal={index + 1}
-                facts={analysis.facts}
-                onFactClick={focusFact}
-              />
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* ── 第三幕 · 拿去发 ── 信与邮件话术同类：都是要发出去的东西 ── */}
-      <section className={cx(ACT, "pt-10 md:pt-12")}>
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-title text-ink">拿去发</h2>
-          <p className="font-mono text-micro uppercase text-muted">
-            英文正文 · 中文对照
-          </p>
-        </div>
-
-        {/*
-          单列，不再分栏。中文对照与邮件话术都已折叠成一条摘要，
-          再给它们一根 420px 的旁注栏，那栏就只剩一条 80px 的横条和一大片空白。
-          现在的层级是：信是成品，底下两条是它的附件。
-          信保持 660px（英文约 70 字符/行）；邮件话术放宽到 840px，
-          因为展开后是等宽英文，越窄折行越碎。
-        */}
-        <div
-          ref={letterRef}
-          className="mt-4 flex scroll-mt-4 flex-col gap-4 lg:max-w-[840px]"
-        >
-          <AppealLetter
-            id="result-letter"
-            className="lg:max-w-[660px]"
-            letterEn={analysis.letterEn}
-          />
-
-          {analysis.letterZhNotes ? (
-            <LetterNotes
-              className="lg:max-w-[660px]"
-              notes={analysis.letterZhNotes}
-            />
-          ) : null}
-
-          <EmailScript
-            state={caseInput.state}
-            propertyAddress={caseInput.propertyAddress}
-          />
-        </div>
-      </section>
-
-      {/* ── 第四幕 · 行动路线 ── 组件自带标题与横幅，容器只给宽度 ── */}
-      <section className={cx(ACT, "pt-10 md:pt-12")}>
-        <ActionRoadmap
-          id="result-roadmap"
-          state={caseInput.state}
-          bondAlert={analysis.bondLodgementAlert}
-          claimDueAt={caseInput.claimNotice?.dueAt}
+      {/* ── 第一幕 · 判决 ── 自带全幅底色，所以不进容器 ── */}
+      <div id="result-verdict" className="scroll-mt-4">
+        <HeadlineLedger
+          bondAmount={caseInput.bondAmount}
+          ledger={analysis.ledger}
+          mode={analysis.mode}
+          items={analysis.items}
+          stateLabel={caseInput.state}
+          propertyAddress={caseInput.propertyAddress}
+          moveOutDate={caseInput.moveOutDate}
+          onSeeDetails={() => scrollToElement(cardsRef.current)}
+          onWriteLetter={() => scrollToElement(letterRef.current)}
         />
-      </section>
+      </div>
 
-      {/* ── 证据档 ── 它是索引，折叠收尾，不占视线 ── */}
-      <section className={cx(ACT, "pt-10 md:pt-12")}>
-        <div ref={dossierRef} className="scroll-mt-4">
-          <EvidenceDossier
+      <div className="mx-auto w-full max-w-[1152px] px-4 md:px-6 lg:grid lg:grid-cols-[140px_minmax(0,1fr)] lg:gap-9">
+        <ActRail items={ACTS} />
+
+        <div className="min-w-0">
+          {header ? <div className="pt-6">{header}</div> : null}
+
+          {/* ── 第二幕 · 逐笔 ── 产品的差异化就长在这一幕 ── */}
+          <section
+            ref={cardsRef}
+            id="result-cards"
+            className="scroll-mt-4 pt-9 md:pt-11"
+          >
+            <ComparisonStrip
+              items={analysis.items}
+              facts={analysis.facts}
+              onFactClick={focusFact}
+            />
+          </section>
+
+          {/* ── 第三幕 · 拿去发 ── 信是成品，底下两条是它的附件 ── */}
+          <section
+            ref={letterRef}
+            id="result-letter"
+            className="mt-11 scroll-mt-4 border-t border-line pt-9 md:mt-14"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+              <h2 className="h-shout text-title text-ink">拿去发</h2>
+              <p className="font-mono text-micro text-faint">
+                英文正文 · 中文对照 · 邮件模板
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-4 lg:max-w-[840px]">
+              <AppealLetter letterEn={analysis.letterEn} />
+
+              {analysis.letterZhNotes ? (
+                <LetterNotes notes={analysis.letterZhNotes} />
+              ) : null}
+
+              <EmailScript
+                state={caseInput.state}
+                propertyAddress={caseInput.propertyAddress}
+              />
+
+              {/* 发出前的自查：这一条是军规，得贴在信旁边说，不能只留给页脚 */}
+              <p className="bg-ink px-5 py-4 text-label text-paper/75">
+                <span className="mb-1.5 block font-mono text-micro text-verdict-unlawful-on-dark">
+                  发出前自查
+                </span>
+                金额与法条请自行复核一遍。本工具提供信息辅助，不构成法律意见。
+              </p>
+            </div>
+          </section>
+
+          {/* ── 第四幕 · 行动路线 ── 组件自带标题与横幅 ── */}
+          <section
+            id="result-roadmap"
+            className="mt-11 scroll-mt-4 border-t border-line pt-9 md:mt-14"
+          >
+            <ActionRoadmap
+              state={caseInput.state}
+              bondAlert={analysis.bondLodgementAlert}
+              claimDueAt={caseInput.claimNotice?.dueAt}
+            />
+          </section>
+
+          {/* ── 证据档 ── 它是索引，折叠收尾，不占视线 ── */}
+          <section
             id="result-dossier"
-            facts={analysis.facts}
-            evidence={caseInput.evidence}
-            usedFactIds={usedFactIds}
-            onFactClick={focusFact}
-            open={dossierOpen}
-            onOpenChange={setDossierOpen}
-            showConditionReportDoc={showSampleDocuments}
-            conditionReportRef={docRef}
-            sampleBadge={showSampleDocuments}
-          />
+            className="mt-11 scroll-mt-4 border-t border-line pt-9 md:mt-14"
+          >
+            <div ref={dossierRef}>
+              <EvidenceDossier
+                facts={analysis.facts}
+                evidence={caseInput.evidence}
+                usedFactIds={usedFactIds}
+                onFactClick={focusFact}
+                open={dossierOpen}
+                onOpenChange={setDossierOpen}
+                showConditionReportDoc={showSampleDocuments}
+                conditionReportRef={docRef}
+                sampleBadge={showSampleDocuments}
+              />
+            </div>
+          </section>
         </div>
-
-        {/*
-          原先这里还有一段 60 字的免责声明，与根布局 `SiteFooter` 那句重复了。
-          军规只要求「页脚免责声明必须在」—— SiteFooter 常驻，这里只留复核提醒。
-        */}
-        <p className="mt-6 text-caption leading-relaxed text-muted">
-          金额与法条请在发出前自行复核。
-        </p>
-      </section>
+      </div>
     </div>
   );
 }

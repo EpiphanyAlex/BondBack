@@ -83,7 +83,7 @@ export function EvidenceDossier({
     <section
       id={id}
       className={cx(
-        "overflow-hidden rounded-2xl border border-line bg-card",
+        "border border-line bg-card",
         className,
       )}
     >
@@ -95,8 +95,8 @@ export function EvidenceDossier({
         className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 hover:bg-paper md:px-5"
       >
         <span className="min-w-0 flex-1">
-          <span className="block text-section text-ink">证据档</span>
-          <span className="tnum mt-0.5 block text-label text-muted">
+          <span className="h-shout block text-section text-ink">证据档</span>
+          <span className="mt-1 block text-label text-muted">
             {fileCount === 0
               ? "这次没有上传任何证据"
               : `AI 从 ${fileCount} 份证据读到 ${facts.length} 条事实 · 对照卡采用 ${usedCount} 条`}
@@ -142,7 +142,7 @@ export function EvidenceDossier({
           ) : null}
 
           {facts.length === 0 ? (
-            <p className="rounded-xl border border-line bg-paper px-3.5 py-3 text-label leading-relaxed text-muted">
+            <p className="border-l-2 border-line bg-paper px-4 py-3 text-label text-muted">
               这次没有从材料里读到可引用的行。下面的结论因此不做「合法 /
               不合法」的断言，而是逐笔把举证责任推回给房东。
             </p>

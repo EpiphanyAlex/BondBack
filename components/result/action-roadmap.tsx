@@ -19,7 +19,7 @@
 
 import { getConfirmedStateProcesses } from "@/data/legal";
 import type { ProcessStage, StateProcess } from "@/data/legal/types";
-import { formatIsoDateZh } from "@/lib/dates";
+import { formatIsoDateZh, parseIsoDate, todayIsoDate } from "@/lib/dates";
 import type { AUState, BondLodgementAlert, BondLodgementAlertLevel } from "@/lib/types";
 
 import { cx } from "./utils";
@@ -49,11 +49,21 @@ const ALERT_META: Record<
   },
 };
 
+/** 三档预警一律走「左侧三像素色条 + 淡底」，与向导的 Callout 同一个形制 */
 const TONE_CLASS = {
-  info: "border-line bg-card",
-  verify: "border-alert-verify/40 bg-verdict-doubtful-wash",
-  risk: "border-alert-risk/35 bg-alert-risk/10",
+  info: "border-l-line bg-card",
+  verify: "border-l-alert-verify bg-verdict-doubtful-wash",
+  risk: "border-l-alert-risk bg-alert-risk/8",
 } as const;
+
+/** 距截止还有几天。算不出来（没日期 / 已过期）就不摆那个大数字。 */
+function daysUntil(iso: string): number | null {
+  const due = parseIsoDate(iso);
+  const today = parseIsoDate(todayIsoDate());
+  if (!due || !today) return null;
+  const days = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+  return days >= 0 ? days : null;
+}
 
 export interface ActionRoadmapProps {
   state: AUState;
@@ -96,40 +106,45 @@ export function ActionRoadmap({
 
   return (
     <section id={id} className={cx("flex flex-col gap-5", className)}>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-title text-ink">行动路线 · {state}</h2>
-        <span className="font-mono text-micro uppercase text-muted">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <h2 className="h-shout text-title text-ink">行动路线 · {state}</h2>
+        <span className="font-mono text-micro text-faint">
           费用与时限来自官方指引
         </span>
       </div>
 
+      {/* 时限排在最前，而且用 Anton 把「还剩几天」放大 ——
+          这一页所有内容里，只有它是会过期的 */}
       {claimDueAt ? (
-        <p className="border-l-2 border-alert-risk bg-alert-risk/10 px-4 py-3 text-body leading-relaxed text-ink">
-          <span className="font-semibold">先看期限：</span>
-          你收到的押金 claim 通知截止 {formatIsoDateZh(claimDueAt)}
-          。过了这个日期，押金可能按对方的 claim 直接支付。
-        </p>
+        <div className="flex items-center gap-5 border-l-[3px] border-l-alert-risk bg-alert-risk/8 px-5 py-4">
+          {daysUntil(claimDueAt) !== null ? (
+            <p className="shrink-0 font-number text-title leading-none text-verdict-unlawful">
+              {daysUntil(claimDueAt)} 天
+            </p>
+          ) : null}
+          <p className="text-label text-ink">
+            claim 通知截止{" "}
+            <strong className="font-bold">{formatIsoDateZh(claimDueAt)}</strong>
+            。过了这个日期，押金可能按对方的 claim 直接支付。
+          </p>
+        </div>
       ) : null}
 
       {/* 前置检查：先查存管，再谈流程 */}
-      <div className={cx("rounded-2xl border p-4 md:p-5", TONE_CLASS[alertMeta.tone])}>
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h3 className="text-section text-ink">{alertMeta.titleZh}</h3>
-          <span className="font-mono text-micro uppercase text-muted">
-            开工前先查这个
-          </span>
+      <div className={cx("border-l-[3px] px-5 py-4", TONE_CLASS[alertMeta.tone])}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h3 className="h-shout text-section text-ink">{alertMeta.titleZh}</h3>
+          <span className="font-mono text-micro text-faint">开工前先查这个</span>
         </div>
 
-        <p className="mt-2 text-body leading-relaxed text-ink">
+        <p className="mt-2.5 text-label text-ink">
           {bondAlert.reasoningZh}
         </p>
 
         <div className="mt-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5">
           {bondAlert.deadlineBasis || bondAlert.calculatedDeadline ? (
-            <div className="rounded-xl bg-card px-4 py-3">
-              <p className="font-mono text-micro uppercase text-muted">
-                计算依据
-              </p>
+            <div className="bg-card px-4 py-3">
+              <p className="font-mono text-micro text-faint">计算依据</p>
               {bondAlert.calculatedDeadline ? (
                 <p className="tnum mt-1.5 font-mono text-label text-ink">
                   估算存管期限 {formatIsoDateZh(bondAlert.calculatedDeadline)}
@@ -173,17 +188,27 @@ export function ActionRoadmap({
       */}
       <div>
         {/* 「谈不成才往下一级」这件事，编号 1→2→3 加上阶段名已经说清了，不必再写一句 */}
-        <ol className="grid gap-4 lg:grid-cols-3">
+        {/* 三段用顶边细线连成一条时间轴（不是三张等高卡）：第一段朱红，
+            视线从「现在该做的」那头起步，往右是「谈不成再往下一级」。 */}
+        <ol className="grid gap-7 lg:grid-cols-3 lg:gap-0">
           {groups.map((group, index) => (
-            <li key={group.stage} className="flex flex-col gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="tnum flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-caption font-semibold text-white">
-                  {index + 1}
-                </span>
-                <span className="font-mono text-micro uppercase text-muted">
-                  {STAGE_LABEL[group.stage]}
-                </span>
-              </div>
+            <li
+              key={group.stage}
+              className={cx(
+                "flex flex-col gap-4 border-t-[3px] pt-4",
+                index === 0 ? "border-seal" : "border-ink/20",
+                index === 0 ? "lg:pr-6" : index === 1 ? "lg:px-6" : "lg:pl-6",
+              )}
+            >
+              <p
+                className={cx(
+                  "font-mono text-micro",
+                  index === 0 ? "text-verdict-unlawful" : "text-faint",
+                )}
+              >
+                {index === 0 ? "现在" : index === 1 ? "谈不成" : "最后一步"} ·{" "}
+                {STAGE_LABEL[group.stage]}
+              </p>
               {group.items.map((process) => (
                 <ProcessCard key={process.id} process={process} />
               ))}
@@ -203,9 +228,9 @@ function ProcessCard({ process }: { process: StateProcess }) {
   ].filter((item): item is { label: string; value: string } => Boolean(item));
 
   return (
-    <div className="flex h-full w-full flex-col rounded-2xl border border-line bg-card p-4 md:p-5">
-      <h3 className="text-section text-ink">{process.agency}</h3>
-      <p className="mt-1.5 text-label leading-relaxed text-muted">
+    <div className="flex h-full w-full flex-col">
+      <h3 className="text-section font-bold text-ink">{process.agency}</h3>
+      <p className="mt-2 text-label text-muted">
         {process.summaryZh}
       </p>
 
@@ -214,7 +239,7 @@ function ProcessCard({ process }: { process: StateProcess }) {
           {process.stepsZh.map((step) => (
             <li
               key={step}
-              className="grid grid-cols-[0.75rem_1fr] gap-x-2 text-label leading-relaxed text-ink"
+              className="grid grid-cols-[0.75rem_1fr] gap-x-2 text-label text-ink"
             >
               <span aria-hidden="true" className="text-muted">
                 ·
@@ -229,10 +254,10 @@ function ProcessCard({ process }: { process: StateProcess }) {
         <dl className="mt-3 grid grid-cols-[2.5rem_1fr] gap-x-3 gap-y-1.5 border-t border-line pt-3">
           {meta.map((item) => (
             <div key={item.label} className="contents">
-              <dt className="pt-0.5 font-mono text-micro uppercase text-muted">
+              <dt className="pt-0.5 font-mono text-micro text-faint">
                 {item.label}
               </dt>
-              <dd className="text-label leading-relaxed text-ink">
+              <dd className="text-label text-ink">
                 {item.value}
               </dd>
             </div>
@@ -252,11 +277,11 @@ function ProcessCard({ process }: { process: StateProcess }) {
           href={process.sourceUrl}
           target="_blank"
           rel="noreferrer"
-          className="text-label font-semibold text-ink underline underline-offset-2"
+          className="font-mono text-caption text-ink underline underline-offset-4"
         >
           官方页面 ↗
         </a>
-        <span className="tnum font-mono text-micro uppercase text-muted">
+        <span className="font-mono text-micro text-faint">
           核对于 {process.checkedAt}
         </span>
       </div>

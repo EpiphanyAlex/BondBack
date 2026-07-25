@@ -36,19 +36,19 @@ export default function ResultPage() {
   if (!caseInput) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-start gap-4 px-4 py-20">
-        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+        <p className="font-mono text-micro uppercase text-muted">
           没有可显示的案情
         </p>
-        <h1 className="font-display text-[26px] leading-tight font-extrabold text-ink">
+        <h1 className="font-display text-title leading-tight font-extrabold text-ink">
           这里还是空的
         </h1>
-        <p className="text-sm leading-relaxed text-muted">
+        <p className="text-label leading-relaxed text-muted">
           为了不存你的资料，案情只留在这次会话里，刷新页面就清空了。
           回向导重填一遍，两分钟就好。
         </p>
         <Link
           href="/wizard"
-          className="rounded-xl bg-ink px-5 py-3 text-[15px] font-semibold text-white"
+          className="rounded-xl bg-ink px-5 py-3 text-body font-semibold text-white"
         >
           回去填写向导
         </Link>
@@ -61,22 +61,22 @@ export default function ResultPage() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-8">
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <p className="font-mono text-micro uppercase text-muted">
         分析结果
       </p>
-      <h1 className="mt-1.5 font-display text-[26px] leading-tight font-extrabold text-ink">
+      <h1 className="mt-1.5 font-display text-title leading-tight font-extrabold text-ink">
         案情已收到
       </h1>
 
       <div className="mt-5 rounded-2xl border border-line bg-ink px-4 py-4 text-white">
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/45">
+        <p className="font-mono text-micro uppercase text-white/45">
           争取金额
         </p>
-        <p className="tnum font-display text-[32px] leading-none font-extrabold text-gold-bright">
-          <span className="text-[19px] font-semibold">$</span>
+        <p className="tnum font-display text-hero leading-none font-extrabold text-amount-hero">
+          <span className="text-section font-semibold">$</span>
           {caseInput.claimedAmount.toLocaleString("en-AU")}
         </p>
-        <p className="tnum mt-1.5 font-mono text-[11px] text-white/45">
+        <p className="tnum mt-1.5 font-mono text-micro text-white/45">
           {caseInput.state} · 押金 ${caseInput.bondAmount.toLocaleString("en-AU")} ·
           {caseInput.deductions.length} 项扣款 · {caseInput.evidence.length} 张证据
         </p>
@@ -86,7 +86,7 @@ export default function ResultPage() {
         <Callout tone={ALERT_TONE[alert.level]} title={ALERT_TITLE[alert.level]}>
           <p>{alert.reasoningZh}</p>
           {alert.deadlineBasis ? (
-            <p className="mt-2 font-mono text-[12px] leading-relaxed">
+            <p className="mt-2 font-mono text-caption leading-relaxed">
               {alert.deadlineBasis}
             </p>
           ) : null}
@@ -96,7 +96,7 @@ export default function ResultPage() {
           <Callout tone="risk" title="你收到了押金 claim 通知，先看期限">
             <p>{claimDeadline.noteZh}</p>
             {claimDeadline.dueAt ? (
-              <p className="mt-1 font-mono text-[12px]">
+              <p className="mt-1 font-mono text-caption">
                 截止 {formatIsoDateZh(claimDeadline.dueAt)}
               </p>
             ) : null}
@@ -105,17 +105,17 @@ export default function ResultPage() {
       </div>
 
       <div className="mt-5 rounded-2xl border border-dashed border-line px-4 py-5">
-        <p className="text-sm font-medium text-ink">
+        <p className="text-label font-medium text-ink">
           胜算评估卡、英文维权信、行动路线图正在接入
         </p>
-        <p className="mt-1 text-xs leading-relaxed text-muted">
+        <p className="mt-1 text-caption leading-relaxed text-muted">
           模块 03 会拿这份案情和你所在州的现行法条做逐项分析。向导这一段已经跑通。
         </p>
       </div>
 
       <Link
         href="/wizard"
-        className="mt-5 block rounded-xl border border-line bg-card px-4 py-3 text-center text-sm font-medium text-ink"
+        className="mt-5 block rounded-xl border border-line bg-card px-4 py-3 text-center text-label font-medium text-ink"
       >
         回去改答案
       </Link>

@@ -6,12 +6,12 @@
 |---|------|------|------|
 | 00 | [脚手架与首次部署](./00-foundation.md) | 无 | ✅ 完成（<https://bond-back-yanzhuo-lius-projects.vercel.app>；GitHub 自动部署已连、`OPENAI_API_KEY` 已配、Deployment Protection 已关。旧的 `bondback-six.vercel.app` 在另一个 team 下，待新链接稳定后废弃） |
 | 01 | [NSW/VIC 法条资料](./01-legal-data.md) | 无 | ✅ 完成（2026-07-24 关键条款已复核） |
-| — | **[Design tokens + 契约冻结（前置）](../design-tokens.md#7-前置阶段落地清单)** | 00 | 🔨 进行中 —— **§7 四组清单全勾才具备扇出资格** |
-| 02 | [向导：上传优先返工](./02-wizard.md) | 前置 | ⚠️ 已实现，**需返工为「上传优先」**（存管分级规则已自测通过；预填待部署环境复验） |
-| 03a | [分析管线与契约（服务端）](./03a-analysis-pipeline.md) | 01、前置 | 待开工 |
-| 03b | [结果页 UI（对照卡/证据档/信/路线图）](./03b-result-page.md) | 04a（假数据）、前置 | 待开工 |
-| 04a | [示例常量与证据原件](./04a-sample-data-evidence.md) | 01、前置 | 待开工 —— **依赖链起点，最先做** |
-| 04b | [首页 + `/sample` 重放 + 战报卡](./04b-home-replay-share.md) | 03b、04a | 待开工 |
+| — | **[Design tokens + 契约冻结（前置）](../design-tokens.md#7-前置阶段落地清单)** | 00 | ✅ 完成（2026-07-25）—— §7 四组全勾，`lib/types.ts` / `lib/ai.ts` 已冻结 |
+| 02 | [向导：上传优先返工](./02-wizard.md) | 前置 | 🔨 返工中（上传优先） |
+| 03a | [分析管线与契约（服务端）](./03a-analysis-pipeline.md) | 01、前置 | 🔨 进行中 |
+| 03b | [结果页 UI（对照卡/证据档/信/路线图）](./03b-result-page.md) | 04a（假数据）、前置 | 待开工（等 04a） |
+| 04a | [示例常量与证据原件](./04a-sample-data-evidence.md) | 01、前置 | 🔨 进行中 —— **依赖链起点** |
+| 04b | [首页 + `/sample` 重放 + 战报卡](./04b-home-replay-share.md) | 03b、04a | 待开工（等 03b） |
 | 05 | [打磨保险](./05-polish.md) | 02、03a/b、04a/b | 待开工 |
 | 06 | [~~入住留证模式~~](./06-move-in-mode.md) | — | ❌ **已取消**（v1.1 §6） |
 | 07 | [传播材料与提交（封版后）](./07-submission.md) | 封版 | 待开工 |

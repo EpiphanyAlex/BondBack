@@ -32,7 +32,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#12212f",
+  themeColor: "#12212f", // token-ok: --ink 的字面值，浏览器 chrome 取不到 CSS 变量
+  /**
+   * 锁定浅色（design-tokens.md §4.4）：微信安卓版会对未声明适配的网页强制反色，
+   * 会把「墨蓝 + 金 + 印章红」整套配色毁掉，而用户全都在微信里打开链接。
+   * 走 viewport 而不是手写 <head>，由 Next 保证标签只出现一次。
+   */
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -45,7 +51,7 @@ export default function RootLayout({
       lang="zh-CN"
       className={`${geistSans.variable} ${bricolage.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-dvh flex-col bg-background text-foreground">
+      <body className="flex min-h-dvh flex-col bg-paper text-ink">
         {/* 会话内存挂在根布局，/wizard → /result 之间不丢；刷新即清空 */}
         <CaseSessionProvider>
           <main className="flex-1">{children}</main>

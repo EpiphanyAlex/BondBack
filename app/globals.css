@@ -5,42 +5,94 @@
    取澳洲租赁 itemised deduction statement 与中文公文用印的意象：
    墨蓝作权威底色、金色只给钱数、印章红只给「不合法 / 高风险」。
    全站唯一的深色面是底部账本条 —— 它是记忆点，其余一律安静。
+
+   本文件的唯一事实源是 docs/design-tokens.md。材质色只留在 :root，
+   业务组件一律走 @theme inline 里的语义别名，三个并行模块才不会各挑一个红。
    ──────────────────────────────────────────────────────────────────── */
 :root {
+  /* 微信安卓版会对未声明适配的网页强制反色，锁死浅色是防御不是偷懒 */
+  color-scheme: light;
+
+  /* ── 材质色（不直接用于业务组件）── */
   --ink: #12212f; /* 墨蓝：标题、账本条 */
   --ink-soft: #24384b; /* 墨蓝浅一档：账本条内分隔 */
   --paper: #f4f6f8; /* 冷调纸面 */
   --card: #ffffff;
   --line: #dfe4ea; /* 发丝分隔线 */
   --muted: #5f6d7e; /* 次要文字 */
-  --gold: #9c650f; /* 金额（浅底文字，保证对比度） */
+  --gold: #9c650f; /* 浅底上的金色文字，保证对比度 */
   --gold-bright: #e8a33d; /* 深底上的金额、预填高亮 */
   --gold-wash: #fdf3e0; /* 预填高亮底 */
   --seal: #b93a27; /* 印章红：不合法、高风险 */
+  --seal-wash: #fbeeec;
+  --seal-on-dark: #f0806b;
   --jade: #1c6b5d; /* 合法、已确认 */
+  --jade-wash: #e9f3f0;
+  --jade-on-dark: #5fbfa8;
 
-  --background: var(--paper);
-  --foreground: var(--ink);
-  --brand: var(--ink);
-  --brand-foreground: #ffffff;
+  /* ── 动效 ── */
+  --duration-quick: 150ms; /* hover、按下、颜色过渡 */
+  --duration-settle: 280ms; /* 步骤进场、卡片翻开 */
+  --duration-sweep: 1600ms; /* 预填魔法的金色扫过 */
+  --duration-beat: 1200ms; /* /sample 重放动画的一个节拍 */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* 断点：删掉三个，只留 md(768) / lg(1024) */
+  --breakpoint-sm: initial;
+  --breakpoint-xl: initial;
+  --breakpoint-2xl: initial;
+
+  /* ── 排版：7 档，大字号 clamp() 流体缩放，正文以下固定 ── */
+  --text-hero: clamp(1.75rem, 1.3rem + 2.2vw, 3rem);
+  --text-hero--line-height: 1.1;
+  --text-hero--font-weight: 800;
+  --text-title: clamp(1.375rem, 1.15rem + 1.1vw, 2rem);
+  --text-title--line-height: 1.2;
+  --text-title--font-weight: 700;
+  --text-section: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  --text-section--line-height: 1.35;
+  --text-section--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.5;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.4;
+  --text-micro--letter-spacing: 0.14em;
+
+  /* ── 语义色：结论三档（红/金/绿全部让给结论）── */
+  --color-verdict-unlawful: var(--seal);
+  --color-verdict-unlawful-wash: var(--seal-wash);
+  --color-verdict-unlawful-on-dark: var(--seal-on-dark);
+  --color-verdict-doubtful: var(--gold);
+  --color-verdict-doubtful-wash: var(--gold-wash);
+  --color-verdict-doubtful-on-dark: var(--gold-bright);
+  --color-verdict-lawful: var(--jade);
+  --color-verdict-lawful-wash: var(--jade-wash);
+  --color-verdict-lawful-on-dark: var(--jade-on-dark);
+
+  /* ── 语义色：金额与状态 ──
+     amount-hero 对浅底只有 1.99:1，只能坐在深色账本条上 */
+  --color-amount: var(--ink);
+  --color-amount-hero: var(--gold-bright);
+  --color-alert-verify: var(--gold);
+  --color-alert-risk: var(--seal);
+  --color-evidence-used: var(--jade);
+  --color-evidence-unused: var(--muted);
+
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* 既有材质色仍暴露给布局用（bg-ink / border-line 等） */
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-paper: var(--paper);
   --color-card: var(--card);
   --color-line: var(--line);
   --color-muted: var(--muted);
-  --color-gold: var(--gold);
   --color-gold-bright: var(--gold-bright);
-  --color-gold-wash: var(--gold-wash);
-  --color-seal: var(--seal);
-  --color-jade: var(--jade);
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
 
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -53,6 +105,8 @@
 
 body {
   font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -76,7 +130,7 @@ body {
 }
 
 .prefilled {
-  animation: prefill-sweep 1.6s ease-out both;
+  animation: prefill-sweep var(--duration-sweep) ease-out both;
 }
 
 @keyframes rise-in {
@@ -91,7 +145,7 @@ body {
 }
 
 .step-enter {
-  animation: rise-in 0.28s ease-out both;
+  animation: rise-in var(--duration-settle) var(--ease-settle) both;
 }
 
 /* 表单原子：统一发丝描边 + 聚焦墨蓝环，避免各处各写一套 */
@@ -102,7 +156,8 @@ body {
   background-color: var(--card);
   padding: 0.75rem 0.875rem;
   color: var(--ink);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--duration-quick) ease,
+    box-shadow var(--duration-quick) ease;
 }
 
 .field-input::placeholder {
@@ -127,6 +182,7 @@ textarea {
   outline-offset: 2px;
 }
 
+/* 全局降级：新动画不必各自再写一遍 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

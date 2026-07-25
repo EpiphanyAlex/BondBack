@@ -39,7 +39,7 @@ export function StepReview({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-8">
       <StepAmounts justPrefilled={justPrefilled} />
 
       <SectionCard

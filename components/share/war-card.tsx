@@ -8,7 +8,7 @@
  * 虚构案例作证，所以卡上没有「我」，只有这个案子的数字。
  *
  * **对比度红线**：主数字用 `--color-amount-hero`，它对浅色纸面只有 1.99:1，
- * 只能坐在深色面上（墨蓝底 7.58:1）。所以整张卡是 `bg-ink`。
+ * 只能坐在深色面上。所以整张卡是 `bg-ink`（墨黑），方角，与全站同一套面。
  *
  * 实现：DOM 先按 3:4 竖版画出来 → `html-to-image` 转 PNG → 换成 `<img>`，
  * 微信里长按即可保存 / 转发。二维码由 `qrcode` 在本地生成，不发网络请求，
@@ -62,60 +62,59 @@ export function WarCard({
   return (
     <div
       className={cx(
-        "flex aspect-[3/4] w-full max-w-[360px] flex-col justify-between rounded-2xl bg-ink px-5 py-5 text-white",
+        "flex aspect-[3/4] w-full max-w-[360px] flex-col justify-between bg-ink px-5 py-5 text-paper",
         className,
       )}
     >
       <div className="flex items-center justify-between gap-2">
         {sample ? (
-          <span className="rounded-full border border-white/25 px-2 py-0.5 font-mono text-micro uppercase text-white/70">
+          <span className="border border-gold-bright/50 px-2.5 py-1 font-mono text-micro text-paper/75">
             示例案例
           </span>
         ) : (
           <span />
         )}
-        <span className="font-mono text-micro uppercase text-white/55">
+        <span className="font-mono text-micro uppercase text-paper/55">
           BondBack · 押金侠
         </span>
       </div>
 
       {/* 主数字：找出多少可争议扣款 —— 不是「追回了多少」 */}
       <div>
-        <p className="font-mono text-micro uppercase text-white/55">
+        <p className="font-mono text-micro uppercase text-paper/55">
           AI 逐项找出
         </p>
-        <p className="tnum mt-1 font-display text-hero leading-none font-extrabold text-amount-hero">
-          <span className="text-section font-semibold">$</span>
-          {formatMoney(ledger.disputableTotal)}
+        <p className="mt-1.5 font-number text-num-lg leading-none text-amount-hero">
+          ${formatMoney(ledger.disputableTotal)}
         </p>
-        <p className="mt-1.5 text-body font-semibold text-white">可争议扣款</p>
-        <p className="tnum mt-2 text-label leading-snug text-white/70">
+        <p className="h-shout mt-2 text-section text-paper">可争议扣款</p>
+        <p className="tnum mt-2 text-label leading-snug text-paper/70">
           按此应退回至少{" "}
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-paper">
             {money(ledger.refundExpected)}
           </span>
         </p>
       </div>
 
       <div className="border-t border-ink-soft pt-3">
-        <p className="tnum font-mono text-caption text-white/60">
+        <p className="tnum font-mono text-caption text-paper/60">
           押金 {money(bondAmount)} · 索扣 {money(ledger.claimedTotal)}
         </p>
-        <p className="tnum mt-0.5 font-mono text-caption text-white/60">
+        <p className="tnum mt-0.5 font-mono text-caption text-paper/60">
           {itemCount} 笔 · {stateLabel} 租赁法 {statuteCount} 条法条
         </p>
       </div>
 
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-label leading-snug text-white/80">
+          <p className="text-label leading-snug text-paper/80">
             扫码，逐项比对你的扣款单
           </p>
-          <p className="mt-1 text-caption leading-snug text-white/45">
+          <p className="mt-1 text-caption leading-snug text-paper/45">
             信息辅助，不构成法律意见
           </p>
         </div>
-        <span className="shrink-0 rounded-lg bg-white p-1.5">
+        <span className="shrink-0 bg-paper p-1.5">
           {qrDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -216,7 +215,7 @@ export function WarCardShare({
         <img
           src={png}
           alt="BondBack 战报卡"
-          className="block w-full max-w-[360px] rounded-2xl"
+          className="block w-full max-w-[360px]"
         />
       ) : (
         <div ref={nodeRef} className="w-full max-w-[360px]">

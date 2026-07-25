@@ -4,7 +4,10 @@
  * 三步向导（模块 02）。
  *
  * 形态是「报税式」流水线：每步一屏、进度可见、可回退改答案，不是聊天。
- * 主行动固定在底部账本条里，单手就能走完。
+ *
+ * 桌面按稿子 §02 分三栏：**左轨给步骤 / 中栏给表单 / 右栏是常驻的墨黑战报栏**。
+ * 中栏坚持单列 —— 多栏表单是公认反模式，加宽不等于分栏。
+ * 手机塌回单列 + 底部一条 88px 的行动条，正文不再被两层信息挤压。
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -14,8 +17,10 @@ import { StepBasics } from "@/components/wizard/step-basics";
 import { StepEvidence } from "@/components/wizard/step-evidence";
 import { StepReview } from "@/components/wizard/step-review";
 import { LedgerBar } from "@/components/wizard/ledger-bar";
+import { WarReport } from "@/components/wizard/war-report";
 import {
   StepHeading,
+  StepRail,
   WizardTopBar,
   type WizardStepMeta,
 } from "@/components/wizard/wizard-chrome";
@@ -30,22 +35,26 @@ const STEPS: WizardStepMeta[] = [
   {
     id: "basics",
     title: "第一步 · 基本情况",
-    question: "先说清楚：在哪个州，为什么被扣？",
-    hint: "州决定了适用哪部法、多长时限。十几秒。",
-    cta: "下一步",
+    question: "在哪个州，为什么被扣？",
+    railZh: "基本情况",
+    railNoteZh: "州决定了适用哪部法、多长时限。整个向导两分钟，可随时回退改答案。",
+    cta: "下一步 · 传证据",
   },
   {
     id: "evidence",
     title: "第二步 · 上传证据",
-    question: "手里有什么材料，先传上来",
-    hint: "现在就把金额和扣款明细读出来，下一步只用核对。没有也能跳过。",
-    cta: "传好了，去核对",
+    question: "手里有什么，先传上来",
+    railZh: "上传证据",
+    railNoteZh:
+      "材料越全，能引用的原句越多。没有也能跳过 —— 那时它会改成逐笔要房东举证。",
+    cta: "传好了 · 去核对",
   },
   {
     id: "review",
     title: "第三步 · 核对与补全",
     question: "核对一下，空的补上",
-    hint: "读出来的已经填好；你改过的不会被覆盖。",
+    railZh: "核对与补全",
+    railNoteZh: "金色底的字段是读出来的，改一下就变成你的答案。",
     cta: "看看我的胜算",
   },
 ];
@@ -60,9 +69,8 @@ export default function WizardPage() {
   const step = STEPS[stepIndex]!;
 
   /*
-   * 换步骤回到顶部。**不能用 `scrollIntoView`**：`topRef` 紧贴在 `sticky top-0`
+   * 换步骤回到顶部。**不能用 `scrollIntoView`**：抬头紧贴在 `sticky top-0`
    * 的顶栏下面，把它的顶边对到视口顶边，标题就正好被顶栏盖住半行。
-   * 向导本身就是整页，直接回文档原点最简单也最准。
    */
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -106,6 +114,13 @@ export default function WizardPage() {
     router.push("/result");
   };
 
+  const blockerNote =
+    showBlocker && blocker ? (
+      <p className="font-mono text-caption text-verdict-unlawful-on-dark">
+        {blocker}
+      </p>
+    ) : null;
+
   return (
     <div className="flex min-h-dvh flex-col">
       <WizardTopBar
@@ -114,32 +129,35 @@ export default function WizardPage() {
         onBack={() => goToStep(stepIndex - 1)}
       />
 
-      <div className="flex-1">
-        {/* ≥lg 加宽到 720px、不分栏（design-tokens §4.3）—— 多栏表单是公认反模式 */}
+      {/* 260 / 自适应 / 400 —— 稿子 §02 的三栏。手机与平板塌回单列 */}
+      <div className="flex-1 lg:grid lg:grid-cols-[260px_minmax(0,1fr)_400px] lg:items-stretch">
+        <StepRail steps={STEPS} stepIndex={stepIndex} onJump={goToStep} />
+
         <div
           key={step.id}
-          className="step-enter mx-auto max-w-md px-4 pb-8 pt-6 lg:max-w-[720px]"
+          className="step-enter mx-auto w-full max-w-[720px] px-4 pt-8 pb-10 md:px-6 lg:mx-0 lg:max-w-none lg:px-12 lg:pt-11"
         >
           <StepHeading step={step} />
 
-          <div className="mt-6">
+          <div className="mt-9 flex flex-col gap-8">
             {stepIndex === 0 ? <StepBasics /> : null}
             {stepIndex === 1 ? <StepEvidence onPrefilled={setJustPrefilled} /> : null}
             {stepIndex === 2 ? <StepReview justPrefilled={justPrefilled} /> : null}
           </div>
         </div>
+
+        <WarReport
+          stepIndex={stepIndex}
+          primaryLabel={step.cta ?? "下一步"}
+          onPrimary={handlePrimary}
+          blocker={blockerNote}
+        />
       </div>
 
       <LedgerBar
-        bondAmount={bond}
-        claimedAmount={claimed}
         primaryLabel={step.cta ?? "下一步"}
         onPrimary={handlePrimary}
-        secondary={
-          showBlocker && blocker ? (
-            <p className="text-caption text-gold-bright">{blocker}</p>
-          ) : null
-        }
+        secondary={blockerNote}
       />
     </div>
   );

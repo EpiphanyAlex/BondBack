@@ -37,9 +37,10 @@ export function StepAmounts({
     Math.abs(total - claimed) > 1;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-8">
       <SectionCard title="押金和被扣的钱">
-        <div className="space-y-4">
+        {/* 两个金额并排：它们是一对，稿子里也是左右各一格 */}
+        <div className="grid max-w-[600px] gap-5 md:grid-cols-2">
           <Field
             label="押金总额"
             htmlFor="bond-amount"
@@ -56,7 +57,7 @@ export function StepAmounts({
           </Field>
 
           <Field
-            label="对方说要扣掉多少"
+            label="被扣总额"
             htmlFor="claimed-amount"
             hint="不确定就先留空，填完下面的明细会自动加总。"
             highlight={filled("claimedAmount")}
@@ -70,7 +71,9 @@ export function StepAmounts({
               }}
             />
           </Field>
+        </div>
 
+        <div className="mt-5 grid max-w-[600px] gap-5 md:grid-cols-2">
           <Field
             label="退租日期"
             htmlFor="move-out-date"
@@ -102,18 +105,20 @@ export function StepAmounts({
               }}
             />
           </Field>
+        </div>
 
-          {claimedOverBond ? (
+        {claimedOverBond ? (
+          <div className="mt-5 max-w-[600px]">
             <Callout tone="warn" title="被扣金额超过了押金总额">
               可能是打字打错了，也可能对方在押金之外另外索赔。两种情况都可以继续，
               分析时会一并说明。
             </Callout>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </SectionCard>
 
       <SectionCard
-        title="对方到底扣了哪几笔？"
+        title="扣款明细 · 金额合计须等于被扣总额"
         hint="逐项写清楚，胜算评估会一项一项给结论——哪笔能争、哪笔别争，分得开。"
       >
         <DeductionList highlight={filled("deductions")} />
@@ -127,7 +132,7 @@ export function StepAmounts({
 
       <BondLodgementFields />
 
-      <SectionCard title="还有什么想补充的？" tone="quiet">
+      <SectionCard title="还想补一句（可选）" tone="quiet">
         <Field label="备注" htmlFor="case-notes" hint="选填。比如「入住时地毯就有污渍，我拍了照」。">
           <TextArea
             id="case-notes"

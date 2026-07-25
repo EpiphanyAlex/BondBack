@@ -18,9 +18,9 @@ export function StepEvidence({
   onPrefilled: (fields: PrefillableField[]) => void;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-6">
       <SectionCard
-        title="传上来，字段我来填"
+        title="拖进来，或点击选择文件"
         hint="AI 会读出押金、被扣金额、退租日期和扣款明细，直接填进下一步的表。图片只留在这次会话里，不上传存档。"
       >
         <EvidenceUploader onPrefilled={onPrefilled} />

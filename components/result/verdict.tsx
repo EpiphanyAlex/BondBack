@@ -20,7 +20,13 @@ interface VerdictMeta {
   /** 浅色衬底 */
   wash: string;
   border: string;
-  /** 深色账本条上的文字与色块 */
+  /** 实色边框，给引语的左侧竖线这类要「有力」的地方 */
+  borderStrong: string;
+  /** 块面：对照卡头、三色条这类整片铺色的地方（金当块面好看，当文字读不清）*/
+  fill: string;
+  /** 卡头铺满块面之后，压在上面的字该用什么颜色 */
+  onFillText: string;
+  /** 墨黑面上的文字与色块 */
   onDarkText: string;
   onDarkBg: string;
 }
@@ -32,6 +38,9 @@ export const VERDICT_META: Record<Verdict, VerdictMeta> = {
     text: "text-verdict-unlawful",
     wash: "bg-verdict-unlawful-wash",
     border: "border-verdict-unlawful/30",
+    borderStrong: "border-verdict-unlawful-fill",
+    fill: "bg-verdict-unlawful-fill",
+    onFillText: "text-paper",
     onDarkText: "text-verdict-unlawful-on-dark",
     onDarkBg: "bg-verdict-unlawful-on-dark",
   },
@@ -41,6 +50,10 @@ export const VERDICT_META: Record<Verdict, VerdictMeta> = {
     text: "text-verdict-doubtful",
     wash: "bg-verdict-doubtful-wash",
     border: "border-verdict-doubtful/40",
+    borderStrong: "border-verdict-doubtful-fill",
+    fill: "bg-verdict-doubtful-fill",
+    // 金块面很亮，压墨黑字才读得出（浅底文字色 #9A6A10 在金上反而糊）
+    onFillText: "text-ink",
     onDarkText: "text-verdict-doubtful-on-dark",
     onDarkBg: "bg-verdict-doubtful-on-dark",
   },
@@ -50,6 +63,9 @@ export const VERDICT_META: Record<Verdict, VerdictMeta> = {
     text: "text-verdict-lawful",
     wash: "bg-verdict-lawful-wash",
     border: "border-verdict-lawful/30",
+    borderStrong: "border-verdict-lawful-fill",
+    fill: "bg-verdict-lawful-fill",
+    onFillText: "text-paper",
     onDarkText: "text-verdict-lawful-on-dark",
     onDarkBg: "bg-verdict-lawful-on-dark",
   },
@@ -101,72 +117,5 @@ export function VerdictIcon({
       <circle cx="12" cy="12" r="9" />
       <path d="M8 12.4l2.7 2.7L16 9.8" />
     </svg>
-  );
-}
-
-/** 对照卡标题右侧的结论徽章。 */
-export function VerdictBadge({
-  verdict,
-  className,
-}: {
-  verdict: Verdict;
-  className?: string;
-}) {
-  const meta = VERDICT_META[verdict];
-  return (
-    <span
-      className={cx(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-label font-semibold",
-        meta.border,
-        meta.wash,
-        meta.text,
-        className,
-      )}
-    >
-      <VerdictIcon verdict={verdict} />
-      {meta.labelZh}
-    </span>
-  );
-}
-
-/**
- * 结论印章 —— 本版的签名元素，只出现在结果页 ≥lg 的页边批注栏里。
- *
- * 配色里一直有一档叫「印章红」，却从没真画过一枚印。产品做的事就是**逐项判决**，
- * 所以每笔扣款在页边被盖一枚章：双边框、微微歪、盖在纸上。
- *
- * 三档共用同一枚章的形制，只换颜色与字 —— 章是「判决」这个动作的符号，
- * 不是三种装饰。红线照旧：图标 + 颜色 + 中文标签同时在场，不靠颜色单打独斗。
- * 歪角是静态 transform，不是动画，`prefers-reduced-motion` 无需介入。
- */
-export function VerdictSeal({
-  verdict,
-  className,
-}: {
-  verdict: Verdict;
-  className?: string;
-}) {
-  const meta = VERDICT_META[verdict];
-  return (
-    <span
-      className={cx(
-        "relative inline-flex size-20 shrink-0 rotate-[-6deg] flex-col items-center justify-center gap-1 rounded-md border-2 bg-card",
-        meta.border,
-        meta.text,
-        className,
-      )}
-    >
-      {/* 内圈细框：传统印章的双边，也把章面和纸面分开 */}
-      <span
-        aria-hidden="true"
-        className={cx(
-          "pointer-events-none absolute inset-[3px] rounded-sm border",
-          meta.border,
-          meta.wash,
-        )}
-      />
-      <VerdictIcon verdict={verdict} size={22} className="relative" />
-      <span className="relative text-label font-semibold">{meta.shortZh}</span>
-    </span>
   );
 }

@@ -1,38 +1,40 @@
 "use client";
 
-/** 第 1 步：选州 + 纠纷类型（母文档 §3.2，多选） */
+/** 第 1 步：选州 + 纠纷类型 + 退租日期（母文档 §3.2，纠纷类型多选） */
 
 import { useCaseSession } from "@/lib/case-session";
 import type { AUState, DisputeType } from "@/lib/types";
 
-import { ChipGroup, ChoiceGroup, SectionCard, type Choice } from "./fields";
+import { ChipGroup, DateInput, SectionCard, type Choice } from "./fields";
 
-/** 真正能选的两个州 */
-const STATE_CHOICES: Choice<AUState>[] = [
-  { value: "NSW", label: "新南威尔士 NSW", hint: "悉尼等" },
-  { value: "VIC", label: "维多利亚 VIC", hint: "墨尔本等" },
+/**
+ * 真正能选的两个州。州名底下压着适用的那部法 —— 稿子里这两张卡是整个
+ * 向导第一眼看到的东西，写上法案全名比写「悉尼等」更能立住可信度。
+ */
+const STATE_CHOICES: { value: AUState; act: string }[] = [
+  { value: "NSW", act: "Residential Tenancies Act 2010" },
+  { value: "VIC", act: "Residential Tenancies Act 1997" },
 ];
 
 /**
  * 其余州和领地照 PRD 要求「显示但禁用，标即将支持」。
  *
- * 原先它们和 NSW / VIC 一样是六张等大的禁用卡，各自带一行「即将支持」——
- * 结果**选不了的东西占掉了选择区四分之三**，还把「即将支持」说了六遍。
- * 压成一行不可点的小标签：显示到位、禁用到位，「即将支持」作为组标签说一次。
+ * 压成一行不可点的小标签：显示到位、禁用到位，「即将支持」作为组标签说一次 ——
+ * 选不了的东西不该占掉选择区四分之三。
  */
 const UPCOMING_STATES = ["QLD", "WA", "SA", "TAS", "ACT", "NT"];
 
 const DISPUTE_CHOICES: Choice<DisputeType>[] = [
-  { value: "cleaning", label: "清洁费" },
-  { value: "damage", label: "损坏 vs 合理磨损" },
+  { value: "cleaning", label: "清洁 / 地毯" },
+  { value: "damage", label: "损坏 / 维修" },
   { value: "early-termination", label: "提前解约扣费" },
-  { value: "bond", label: "押金逾期未退 / 未存管" },
-  { value: "rent-arrears", label: "拖欠租金抵扣" },
+  { value: "bond", label: "押金存管" },
+  { value: "rent-arrears", label: "欠租 / 水电" },
   { value: "other", label: "其他" },
 ];
 
 export function StepBasics() {
-  const { draft, updateDraft } = useCaseSession();
+  const { draft, updateDraft, markTouched } = useCaseSession();
 
   const toggleDispute = (value: DisputeType) => {
     updateDraft((current) => ({
@@ -43,27 +45,53 @@ export function StepBasics() {
   };
 
   return (
-    <div className="space-y-4">
-      <SectionCard
-        title="你在哪个州租房？"
-        hint="押金规则和时限各州不同，选错后面的分析不作数。"
-      >
-        <ChoiceGroup
-          ariaLabel="选择所在州"
-          columns={2}
-          choices={STATE_CHOICES}
-          value={draft.state}
-          onChange={(value) => updateDraft({ state: value })}
-        />
+    <>
+      <SectionCard title="房子在哪个州">
+        <div
+          role="radiogroup"
+          aria-label="选择所在州"
+          className="grid max-w-[560px] grid-cols-2 gap-3.5"
+        >
+          {STATE_CHOICES.map((choice) => {
+            const selected = draft.state === choice.value;
+            return (
+              <button
+                key={choice.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => updateDraft({ state: choice.value })}
+                className={`border-2 px-5 py-5 text-left transition-colors duration-150 ${
+                  selected
+                    ? "border-seal bg-ink"
+                    : "border-line bg-card hover:border-ink/40"
+                }`}
+              >
+                <span
+                  className={`block font-number text-title leading-none ${
+                    selected ? "text-amount-hero" : "text-ink"
+                  }`}
+                >
+                  {choice.value}
+                </span>
+                <span
+                  className={`mt-2 block text-label ${
+                    selected ? "text-paper/65" : "text-faint"
+                  }`}
+                >
+                  {choice.act}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-        <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1.5">
-          <span className="font-mono text-micro uppercase text-muted">
-            即将支持
-          </span>
+        <p className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-2">
+          <span className="font-mono text-micro text-faint">即将支持</span>
           {UPCOMING_STATES.map((code) => (
             <span
               key={code}
-              className="rounded-full border border-dashed border-line px-2.5 py-0.5 font-mono text-caption text-muted"
+              className="border border-dashed border-line px-2.5 py-1 font-mono text-caption text-faint"
             >
               {code}
             </span>
@@ -71,19 +99,42 @@ export function StepBasics() {
         </p>
       </SectionCard>
 
-      <SectionCard title="哪些扣款让你不服？" hint="可以多选。">
-        <ChipGroup
-          ariaLabel="选择纠纷类型"
-          choices={DISPUTE_CHOICES}
-          values={draft.disputeTypes}
-          onToggle={toggleDispute}
-        />
+      <SectionCard title="房东扣钱的理由（可多选）">
+        <div className="max-w-[560px]">
+          <ChipGroup
+            ariaLabel="选择纠纷类型"
+            choices={DISPUTE_CHOICES}
+            values={draft.disputeTypes}
+            onToggle={toggleDispute}
+          />
+        </div>
         {draft.disputeTypes.includes("rent-arrears") ? (
-          <p className="mt-3 text-caption leading-relaxed text-muted">
+          <p className="mt-3.5 text-caption text-muted">
             拖欠租金抵扣通常房东占理，分析会直说「合法，别争」。
           </p>
         ) : null}
       </SectionCard>
-    </div>
+
+      {/*
+        日期放在这一步是稿子的安排，但它仍然**允许留空**：上传优先（v1.1）下，
+        扣款清单里往往就写着退租日期，空着就让预填去读；这里填了就算用户自己的答案，
+        预填不会覆盖（`markTouched`）。第 3 步还会再露一次面供核对。
+      */}
+      <SectionCard title="退租日期 · 时限全靠它算">
+        <div className="max-w-[280px]">
+          <DateInput
+            id="move-out-date-basics"
+            value={draft.moveOutDate}
+            onChange={(value) => {
+              markTouched("moveOutDate");
+              updateDraft({ moveOutDate: value });
+            }}
+          />
+        </div>
+        <p className="mt-2.5 text-caption text-muted">
+          不记得也没关系 —— 下一步传上扣款清单，它自己会读出来。
+        </p>
+      </SectionCard>
+    </>
   );
 }

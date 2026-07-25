@@ -86,7 +86,7 @@ export function EvidenceThumb({
   return (
     <div
       className={cx(
-        "overflow-hidden rounded-xl border border-line bg-card",
+        "overflow-hidden border border-line bg-card",
         className,
       )}
     >
@@ -97,7 +97,7 @@ export function EvidenceThumb({
         aria-controls={panelId}
         className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors duration-150 hover:bg-paper md:px-4"
       >
-        <span className="shrink-0 rounded-lg border border-line bg-paper p-2 text-muted">
+        <span className="shrink-0 border border-line bg-paper p-2 text-muted">
           <KindGlyph kind={evidence.kind} />
         </span>
 
@@ -186,7 +186,7 @@ function FactShell({
       <button
         type="button"
         onClick={() => onFactClick(fact)}
-        className="w-full rounded-lg text-left transition-colors duration-150 hover:bg-paper"
+        className="w-full text-left transition-colors duration-150 hover:bg-paper"
       >
         {children}
       </button>
@@ -205,7 +205,7 @@ function FactLine({
 }) {
   return (
     <FactShell fact={fact} onFactClick={onFactClick}>
-      <div className="rounded-lg border border-line px-3 py-2">
+      <div className="border border-line px-3 py-2">
         <div className="flex items-baseline justify-between gap-3">
           <p className="font-mono text-micro uppercase text-muted">
             {fact.locator}
@@ -232,14 +232,14 @@ function ChatBubbles({
     <ul className="flex flex-col gap-2">
       {facts.map((fact) => (
         <FactShell key={fact.id} fact={fact} onFactClick={onFactClick}>
-          <div className="rounded-lg bg-paper px-3 py-2">
+          <div className="bg-paper px-3 py-2">
             <div className="flex items-baseline justify-between gap-3">
               <p className="font-mono text-micro uppercase text-muted">
                 {fact.locator}
               </p>
               <UsedMark used={usedFactIds.includes(fact.id)} />
             </div>
-            <p className="mt-1.5 inline-block rounded-xl rounded-tl-sm border border-line bg-card px-3 py-2 text-label text-ink">
+            <p className="mt-1.5 inline-block border border-line bg-card px-3 py-2 text-label text-ink">
               {fact.quote}
             </p>
           </div>

@@ -1,11 +1,17 @@
 "use client";
 
 /**
- * 逐项对照卡（03b §2）—— 整个产品的差异化就长在这张卡上。
+ * 逐项对照卡 —— 整个产品的差异化就长在这张卡上。
  *
- * 固定四行：证据 / 合同 / 法条 / 结论，外加一条「可争议 $X」页脚。
- * 「扣款 ↔ 证据 ↔ 合同 ↔ 法条」的对应关系必须一眼看懂，所以四行的顺序与标签
- * 不随数据变化，缺什么就说缺什么，不塌行。
+ * 「江湖战报」稿的形态：**卡头整片铺结论色**（朱红 / 金 / 石青）+ Anton 大金额，
+ * 卡身左右两栏「证据 ↔ 法条」，页脚一条「可争 $X」。方角，无圆角。
+ *
+ * 为什么卡头铺色：上一版结论只是标题旁的一枚小徽章，三张卡摞起来长得一模一样。
+ * 铺色之后，横着滑过三张卡就是「红 → 金 → 青」，结论在看清字之前已经传达完了。
+ * 红线照旧：颜色不单打独斗，卡头同时写着中文标签、配着图标。
+ *
+ * 收起时给的是**一眼能用的结论**（引语 + 法条 + 一句为什么）；完整推理、三轴检查、
+ * 法条原文与官方链接都在「展开完整推理」里，一条都没丢。
  *
  * 纯 props：`onFactClick` 由外层接到入住报告原件的定位 API 上。
  */
@@ -18,12 +24,18 @@ import type {
   ContractObligationState,
   EvidenceFact,
   StatuteRef,
+  Verdict,
 } from "@/lib/types";
 
 import { cx, factsById, money, shortActName } from "./utils";
-import { VERDICT_META, VerdictBadge } from "./verdict";
+import { VERDICT_META, VerdictIcon } from "./verdict";
 
-const ORDINALS = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"];
+/** 卡头第一行：结论 + 它对这笔钱意味着什么。 */
+const HEADER_NOTE: Record<Verdict, string> = {
+  unlawful: "不合法 · 可争",
+  doubtful: "待举证 · 球踢回去",
+  lawful: "合法 · 别争",
+};
 
 /**
  * 合同轴的文案。红线：`absent` 只能说「未见」不能说「没有」——
@@ -55,18 +67,12 @@ const FAIR_WEAR_TEXT: Record<CheckState, string | null> = {
 
 export interface ComparisonCardProps {
   item: AnalysisItem;
-  /** 1 起的序号，用于 ①②③ */
+  /** 1 起的序号，落在卡头的等宽小标签里 */
   ordinal?: number;
   /** 本次全部事实，用来把 `evidenceRefs[].factId` 解引用 */
   facts?: EvidenceFact[];
   /** 点证据引语 → 外层负责滚动并高亮到原件。只有带 `anchorId` 的事实才可点 */
   onFactClick?: (fact: EvidenceFact) => void;
-  /**
-   * 结果页 ≥lg 把结论印章放到页边批注栏里，卡内徽章就该让位（否则同一个结论说两遍）。
-   * 手机上没有页边，徽章照旧 —— 所以是 `lg:hidden` 而不是不渲染。
-   * 首页与 `/sample` 单独嵌这张卡时不传，徽章全程在场。
-   */
-  sealInMargin?: boolean;
   className?: string;
   id?: string;
 }
@@ -76,18 +82,18 @@ export function ComparisonCard({
   ordinal,
   facts = [],
   onFactClick,
-  sealInMargin = false,
   className,
   id,
 }: ComparisonCardProps) {
   const lookup = useMemo(() => factsById(facts), [facts]);
   const meta = VERDICT_META[item.verdict];
-  const [openStatute, setOpenStatute] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const refs = item.evidenceRefs
     .map((ref) => ({ ref, fact: lookup.get(ref.factId) }))
-    .filter((entry): entry is { ref: (typeof item.evidenceRefs)[number]; fact: EvidenceFact } =>
-      Boolean(entry.fact),
+    .filter(
+      (entry): entry is { ref: (typeof item.evidenceRefs)[number]; fact: EvidenceFact } =>
+        Boolean(entry.fact),
     );
 
   const chips = [
@@ -95,211 +101,194 @@ export function ComparisonCard({
     FAIR_WEAR_TEXT[item.checks.fairWearTear],
   ].filter((text): text is string => Boolean(text));
 
+  /* 「合法，别争」那张不分栏：它没有要争的东西，两栏会空掉一半。 */
+  const singleColumn = item.verdict === "lawful" && refs.length === 0;
+
   return (
     <article
       id={id}
-      className={cx(
-        "overflow-hidden rounded-2xl border border-line bg-card",
-        className,
-      )}
+      className={cx("flex flex-col border border-line bg-card", className)}
     >
       <header
         className={cx(
-          "flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-4 py-3 md:px-5",
-          meta.wash,
+          "flex flex-wrap items-end justify-between gap-x-4 gap-y-2 px-5 py-5 md:px-7 md:py-6",
+          meta.fill,
+          meta.onFillText,
         )}
       >
-        <div className="min-w-0 flex-1">
-          <p className="text-section text-ink">
-            {ordinal ? (
-              <span className="mr-1.5 font-mono text-muted">
-                {ORDINALS[ordinal - 1] ?? ordinal}
-              </span>
-            ) : null}
-            {item.description}
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 font-mono text-micro opacity-80">
+            <VerdictIcon verdict={item.verdict} size={13} />
+            {HEADER_NOTE[item.verdict]}
+            {ordinal ? ` · 第 ${ordinal} 笔` : null}
           </p>
-          {/* 数字吃展示体：中文标题拿不到 Bricolage（只载了 latin subset），
-              所以排版的主角让给金额 —— 这也正是「账本」该有的样子 */}
-          <p className="tnum mt-0.5 font-display text-section font-semibold text-amount">
-            {money(item.amount)}
-          </p>
+          <h4 className="h-shout mt-2 text-title">{item.description}</h4>
         </div>
-        <VerdictBadge
-          verdict={item.verdict}
-          className={cx(sealInMargin && "lg:hidden")}
-        />
+        <p className="font-number text-num-md leading-none">
+          {money(item.amount)}
+        </p>
       </header>
 
-      <dl className="flex flex-col">
-        <Row label="证据">
+      <div
+        className={cx(
+          "grid gap-6 px-5 py-6 md:px-7",
+          singleColumn ? null : "lg:grid-cols-2 lg:gap-7",
+        )}
+      >
+        {/* ── 证据 ── */}
+        <div className="min-w-0">
           {refs.length === 0 ? (
-            <p className="text-body text-muted">
+            <p className="text-label text-muted">
               {item.verdict === "lawful"
-                ? "这一笔不争议，无需援引证据。"
-                : "本次材料里没有读到可直接引用的行。"}
+                ? "这一笔房东占理，无需援引证据 —— 大方认下能扣的那笔，其余的争议反而更站得住。"
+                : "本次材料里没有读到可直接引用的行，所以改为逐笔要房东举证。"}
             </p>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-5">
               {refs.map(({ ref, fact }) => (
-                <li key={`${ref.factId}`}>
+                <li key={ref.factId}>
                   <EvidenceLine
                     fact={fact}
                     noteZh={ref.noteZh}
+                    verdict={item.verdict}
                     onFactClick={onFactClick}
                   />
                 </li>
               ))}
             </ul>
           )}
-        </Row>
+        </div>
 
-        <Row label="合同">
-          <p className="text-body leading-relaxed text-ink">
-            {CONTRACT_TEXT[item.checks.contractObligation]}
-          </p>
+        {/* ── 法条 ── */}
+        {singleColumn ? null : (
+          <div className="min-w-0">
+            <p className="font-mono text-micro text-faint">
+              {item.statuteRefs.length > 0
+                ? `法条 · ${item.statuteRefs.length} 条压着它`
+                : "法条"}
+            </p>
+            {item.statuteRefs.length === 0 ? (
+              <p className="mt-2.5 text-label text-muted">
+                本项没有援引具体法条。
+              </p>
+            ) : (
+              <ul className="mt-2.5 flex flex-col gap-2">
+                {item.statuteRefs.map((statute) => (
+                  <li key={`${statute.act}-${statute.section}`}>
+                    <span className="inline-block bg-ink px-3 py-2 font-mono text-caption font-semibold text-paper">
+                      {statute.section}
+                      <span className="ml-2 font-normal text-paper/55">
+                        {shortActName(statute.act)}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3.5 text-label text-muted">
+              {CONTRACT_TEXT[item.checks.contractObligation]}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── 展开：完整推理 + 三轴 + 法条原文与出处 ── */}
+      {open ? (
+        <div className="border-t border-line px-5 pb-6 md:px-7">
+          <p className="mt-5 font-mono text-micro text-faint">完整推理</p>
+          <p className="mt-2 text-body text-ink">{item.reasoningZh}</p>
+
           {chips.length > 0 ? (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
+            <ul className="mt-4 flex flex-wrap gap-2">
               {chips.map((text) => (
                 <li
                   key={text}
-                  className="rounded-full border border-line bg-paper px-2 py-0.5 text-caption text-muted"
+                  className="border border-line bg-paper px-2.5 py-1 text-caption text-muted"
                 >
                   {text}
                 </li>
               ))}
             </ul>
           ) : null}
-        </Row>
 
-        <Row label="法条">
-          {item.statuteRefs.length === 0 ? (
-            <p className="text-body text-muted">本项没有援引具体法条。</p>
-          ) : (
-            /* 收起时按内容宽度横向排：三条法条挤成一行三枚小牌，
-               而不是三根几乎全空的横条。展开的那一条撑满整行放原文。
-               展开态提到卡片这一层：同时只开一条，横排才不会跳来跳去。 */
-            <ul className="flex flex-wrap items-start gap-2">
-              {item.statuteRefs.map((statute) => {
-                const key = `${statute.act}-${statute.section}`;
-                const open = openStatute === key;
-                return (
-                  <li key={key} className={cx(open && "w-full")}>
-                    <StatuteLine
-                      statute={statute}
-                      open={open}
-                      onToggle={() => setOpenStatute(open ? null : key)}
-                    />
-                  </li>
-                );
-              })}
+          {item.statuteRefs.length > 0 ? (
+            <ul className="mt-5 flex flex-col gap-4">
+              {item.statuteRefs.map((statute) => (
+                <li key={`${statute.act}-${statute.section}-quote`}>
+                  <StatuteQuote statute={statute} />
+                </li>
+              ))}
             </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      <footer className="mt-auto flex items-center justify-between gap-4 border-t border-line bg-paper px-5 py-3.5 md:px-7">
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          className="font-mono text-micro text-faint underline underline-offset-4 transition-colors duration-150 hover:text-ink"
+        >
+          {open ? "收起推理" : "展开完整推理 · 法条原文"}
+        </button>
+        <span
+          className={cx(
+            "shrink-0 font-number text-num-sm leading-none",
+            item.disputableAmount > 0 ? meta.text : "text-faint",
           )}
-        </Row>
-
-        <Row label="结论" last>
-          <p className="text-body leading-relaxed text-ink">
-            {item.reasoningZh}
-          </p>
-        </Row>
-      </dl>
-
-      <footer className="flex items-baseline justify-between gap-3 border-t border-line bg-paper px-4 py-2.5 md:px-5">
-        <span className="font-mono text-micro uppercase text-muted">
-          {item.disputableAmount > 0 ? "可争议" : "不争议"}
-        </span>
-        <span className={cx("tnum font-mono text-body font-semibold", meta.text)}>
-          {item.disputableAmount > 0 ? money(item.disputableAmount) : "—"}
+        >
+          {item.disputableAmount > 0
+            ? `可争 ${money(item.disputableAmount)}`
+            : "不争议"}
         </span>
       </footer>
     </article>
   );
 }
 
-/* ── 四行的统一骨架 ───────────────────────────────────────────────────── */
-
-function Row({
-  label,
-  last = false,
-  children,
-}: {
-  label: string;
-  last?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cx(
-        "grid grid-cols-[2.75rem_1fr] gap-x-3 px-4 py-3 md:px-5",
-        last ? null : "border-b border-line",
-      )}
-    >
-      <dt className="pt-0.5 font-mono text-micro uppercase text-muted">
-        {label}
-      </dt>
-      <dd className="min-w-0">{children}</dd>
-    </div>
-  );
-}
-
-/* ── 证据行：有 anchorId 才做成可点的定位按钮 ─────────────────────────── */
+/* ── 证据行：引语用左侧竖线，有 anchorId 才做成可点的定位按钮 ─────────── */
 
 function EvidenceLine({
   fact,
   noteZh,
+  verdict,
   onFactClick,
 }: {
   fact: EvidenceFact;
   noteZh?: string;
+  verdict: Verdict;
   onFactClick?: (fact: EvidenceFact) => void;
 }) {
   // 没有 anchorId 就不做成可点的假按钮 —— 点了没反应比不可点更糟
   const clickable = Boolean(fact.anchorId && onFactClick);
-
-  const body = (
-    <>
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="font-mono text-micro uppercase text-muted">
-          {fact.locator}
-        </p>
-        {clickable ? (
-          <span className="inline-flex shrink-0 items-center gap-1 font-mono text-micro uppercase text-ink">
-            定位原件
-            <LocateIcon />
-          </span>
-        ) : null}
-      </div>
-      <p className="mt-1 text-body leading-relaxed text-ink">
-        <span className="text-muted">“</span>
-        {fact.quote}
-        <span className="text-muted">”</span>
-      </p>
-      {noteZh ? (
-        <p className="mt-1 text-caption leading-relaxed text-muted">↳ {noteZh}</p>
-      ) : null}
-    </>
-  );
-
-  /**
-   * 引语用**左侧竖线**而不是四面描边：一是它本来就是引文，竖线是引文该有的标记；
-   * 二是卡里原先是「描边盒子里再套描边盒子」，边框密度很高而层级为零。
-   */
-  const shell = "rounded-r-lg border-l-2 bg-paper px-3.5 py-2.5";
-
-  if (!clickable) {
-    return <div className={cx(shell, "border-muted")}>{body}</div>;
-  }
+  const meta = VERDICT_META[verdict];
 
   return (
-    <button
-      type="button"
-      onClick={() => onFactClick?.(fact)}
-      className={cx(
-        shell,
-        "block w-full border-muted text-left transition-colors duration-150 hover:border-ink hover:bg-verdict-doubtful-wash",
-      )}
-    >
-      {body}
-    </button>
+    <div>
+      <p className="font-mono text-micro text-faint">证据 · {fact.locator}</p>
+      <p
+        className={cx(
+          "mt-2.5 border-l-[3px] pl-3.5 font-mono text-section leading-normal text-ink",
+          meta.borderStrong,
+        )}
+      >
+        “{fact.quote}”
+      </p>
+      {noteZh ? (
+        <p className="mt-3 text-label text-muted">{noteZh}</p>
+      ) : null}
+      {clickable ? (
+        <button
+          type="button"
+          onClick={() => onFactClick?.(fact)}
+          className="mt-3 inline-flex items-center gap-1 border-b border-ink pb-0.5 font-mono text-micro text-ink"
+        >
+          定位原件
+          <LocateIcon />
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -321,53 +310,26 @@ function LocateIcon() {
   );
 }
 
-/* ── 法条行：行上只放 act 短名 + section，展开才给原文与来源 ───────────── */
+/* ── 展开后的法条原文：原句 + 法案全名 + 官方出处 ────────────────────── */
 
-function StatuteLine({
-  statute,
-  open,
-  onToggle,
-}: {
-  statute: StatuteRef;
-  open: boolean;
-  onToggle: () => void;
-}) {
+function StatuteQuote({ statute }: { statute: StatuteRef }) {
   return (
-    <div className={cx("rounded-lg border border-line", open && "w-full")}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors duration-150 hover:bg-paper"
+    <div className="border-l-[3px] border-ink pl-3.5">
+      <p className="font-mono text-caption font-semibold text-ink">
+        {statute.section}
+      </p>
+      <p className="mt-1.5 font-mono text-caption text-muted">
+        “{statute.quote}”
+      </p>
+      <a
+        href={statute.sourceUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-1.5 inline-flex items-center gap-1 font-mono text-micro text-ink underline underline-offset-4"
       >
-        <span className="min-w-0 font-mono text-label text-ink">
-          <span className="text-muted">{shortActName(statute.act)}</span>{" "}
-          <span className="font-semibold">{statute.section}</span>
-        </span>
-        <span className="ml-auto shrink-0 font-mono text-micro uppercase text-muted">
-          {open ? "收起" : "原文"}
-        </span>
-      </button>
-
-      {open ? (
-        <div className="border-t border-line px-3 py-2.5">
-          <p className="font-mono text-caption leading-relaxed text-ink">
-            “{statute.quote}”
-          </p>
-          <p className="mt-1.5 font-mono text-micro uppercase text-muted">
-            {statute.act}
-          </p>
-          <a
-            href={statute.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-1.5 inline-flex items-center gap-1 text-caption font-medium text-ink underline underline-offset-2"
-          >
-            查看来源原文
-            <ExternalIcon />
-          </a>
-        </div>
-      ) : null}
+        {statute.act}
+        <ExternalIcon />
+      </a>
     </div>
   );
 }

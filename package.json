@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check:tokens": "node scripts/check-tokens.mjs",
+    "og": "node scripts/make-og.mjs",
+    "og:sub": "node scripts/og-subset.mjs",
     "test:analysis": "node --experimental-strip-types --loader ./scripts/alias-loader.mjs --test scripts/analysis-validate.test.mjs"
   },
   "dependencies": {

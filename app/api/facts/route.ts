@@ -16,7 +16,7 @@ import type { ChatCompletionContentPart } from "openai/resources/chat/completion
 import { FACTS_MODEL, isAiEnabled } from "@/lib/ai";
 import { FACTS_JSON_SCHEMA, parseFactsPayload } from "@/lib/analysis-schema";
 import { FACTS_SYSTEM_PROMPT, buildFactsUserText } from "@/lib/prompts/facts";
-import { checkRateLimit, clientKeyFromHeaders } from "@/lib/rate-limit";
+import { bodyTooLarge, checkRateLimit, clientKeyFromHeaders } from "@/lib/rate-limit";
 import { EVIDENCE_KINDS, type EvidenceFact, type EvidenceImage, type EvidenceKind } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -29,6 +29,8 @@ const RATE_WINDOW_MS = 10 * 60 * 1000;
 const FACTS_MAX_IMAGES = 8;
 /** 超过就从低优先级开始丢图，而不是整单失败 */
 const FACTS_MAX_PAYLOAD_BYTES = 12 * 1024 * 1024;
+/** 整个请求体的硬上限：留出 JSON 包装的余量，超了连解析都不做 */
+const FACTS_MAX_BODY_BYTES = 16 * 1024 * 1024;
 /** 留余量给平台 60s 上限 */
 const FACTS_TIMEOUT_MS = 48_000;
 
@@ -56,6 +58,7 @@ type Diagnostic =
   | "no-images"
   | "model-error"
   | "no-facts-found"
+  | "payload-too-large"
   | "bad-request";
 
 function errorSummary(error: unknown): string {
@@ -195,6 +198,10 @@ export async function POST(request: Request): Promise<Response> {
       RATE_WINDOW_MS,
     );
     if (!limit.ok) return respond([], "rate-limited");
+
+    if (bodyTooLarge(request.headers, FACTS_MAX_BODY_BYTES)) {
+      return respond([], "payload-too-large");
+    }
 
     const body = (await request.json()) as {
       evidence?: unknown;

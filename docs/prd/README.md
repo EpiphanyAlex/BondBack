@@ -6,13 +6,13 @@
 |---|------|------|------|
 | 00 | [脚手架与首次部署](./00-foundation.md) | 无 | ✅ 完成（<https://bond-back-yanzhuo-lius-projects.vercel.app>；GitHub 自动部署已连、`OPENAI_API_KEY` 已配、Deployment Protection 已关。旧的 `bondback-six.vercel.app` 在另一个 team 下，待新链接稳定后废弃） |
 | 01 | [NSW/VIC 法条资料](./01-legal-data.md) | 无 | ✅ 完成（2026-07-24 关键条款已复核） |
-| — | **[Design tokens + 契约冻结（前置）](../design-tokens.md#7-前置阶段落地清单)** | 00 | ✅ 完成（2026-07-25）—— §7 四组全勾，`lib/types.ts` / `lib/ai.ts` 已冻结 |
+| — | **[Design tokens + 契约冻结（前置）](../design-tokens.md#7-前置阶段落地清单)** | 00 | ✅ 完成（2026-07-25）—— §7 四组全勾。`lib/types.ts` / `lib/ai.ts` 的**冻结已解除**：那是为并行扇出期间不打架，扇出已结束，改动同步四个模块的消费点即可 |
 | 02 | [向导：上传优先返工](./02-wizard.md) | 前置 | ✅ 完成（上传优先；核对区块拆出 `StepReview`；补上 `deduction-notice` slot） |
 | 03a | [分析管线与契约（服务端）](./03a-analysis-pipeline.md) | 01、前置 | ✅ 完成（真实跑通；红线由 `pnpm test:analysis` 守住） |
 | 03b | [结果页 UI（对照卡/证据档/信/路线图）](./03b-result-page.md) | 04a（假数据）、前置 | ✅ 完成（组件全纯 props，04b 已复用） |
 | 04a | [示例常量与证据原件](./04a-sample-data-evidence.md) | 01、前置 | ✅ 完成（7 条事实 / 4 条被采用；账本六数自洽） |
 | 04b | [首页 + `/sample` 重放 + 战报卡](./04b-home-replay-share.md) | 03b、04a | ✅ 完成（断网可看；二维码逐模块验证） |
-| 05 | [打磨保险](./05-polish.md) | 02、03a/b、04a/b | 待开工 —— **主流程已端到端跑通，这里是下一站** |
+| 05 | [打磨保险](./05-polish.md) | 02、03a/b、04a/b | 🔨 进行中 —— 代码侧全勾（OG 卡片、请求体积上限、360/1280 实测、`AI_ENABLED=false` 实测）；**只剩手机 + 微信内置浏览器真机三项** |
 | 06 | [~~入住留证模式~~](./06-move-in-mode.md) | — | ❌ **已取消**（v1.1 §6） |
 | 07 | [传播材料与提交（封版后）](./07-submission.md) | 封版 | 待开工 |
 

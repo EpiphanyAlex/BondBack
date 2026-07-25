@@ -47,6 +47,23 @@ export function checkRateLimit(
   return { ok: true, remaining: limit - bucket.count, retryAfterSeconds };
 }
 
+/**
+ * 请求体积闸门 —— 在 `request.json()` **之前**看 `content-length`，
+ * 免得把几十 MB 的 base64 先解成内存里的字符串再嫌它大。
+ *
+ * 没有 `content-length`（chunked 传输）时放行：真实体积由各 route 自己的
+ * 逐图上限兜底，这里只挡住明摆着超标的那一类。
+ *
+ * 本地 `next start` 下，route 不读 body 就返回会让还在上传的客户端收到
+ * ECONNRESET 而不是这个响应体 —— Vercel 会先把请求缓冲完再调函数，线上没这回事。
+ */
+export function bodyTooLarge(headers: Headers, maxBytes: number): boolean {
+  const raw = headers.get("content-length");
+  if (!raw) return false;
+  const size = Number(raw);
+  return Number.isFinite(size) && size > maxBytes;
+}
+
 /** 取客户端 IP：Vercel 走 x-forwarded-for，本地退化为固定键。 */
 export function clientKeyFromHeaders(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for");

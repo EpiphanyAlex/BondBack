@@ -54,6 +54,16 @@ export const metadata: Metadata = {
   title: "押金侠 BondBack｜房东乱扣 Bond？先别认栽",
   description:
     "面向澳洲 NSW / VIC 租客的信息辅助工具：三步向导整理证据、评估胜算、生成英文维权信。不构成法律意见。",
+  icons: {
+    icon: [
+      {
+        url: "/brand/logo-mark.png",
+        type: "image/png",
+        sizes: "512x512",
+      },
+    ],
+    apple: "/brand/logo-mark.png",
+  },
   openGraph: {
     type: "website",
     locale: "zh_CN",

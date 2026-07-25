@@ -74,7 +74,16 @@ export function WarCard({
         ) : (
           <span />
         )}
-        <span className="font-mono text-micro uppercase text-paper/55">
+        <span className="flex items-center gap-1.5 font-mono text-micro uppercase text-paper/55">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/logo-mark.png"
+            alt=""
+            aria-hidden="true"
+            width={20}
+            height={20}
+            className="size-5 object-contain"
+          />
           BondBack · 押金侠
         </span>
       </div>

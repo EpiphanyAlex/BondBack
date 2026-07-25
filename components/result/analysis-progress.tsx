@@ -134,10 +134,12 @@ export function AnalysisProgress({
         </div>
 
         <aside className="flex flex-col gap-6">
-          {/* 图由画师提供，`src` 一给占位框就退场（见 CharacterSlot） */}
+          {/* 与首页同一位卷宗游侠，但改成直立「朱笔判案」的强反差轮廓。 */}
           <CharacterSlot
+            src="/character/analysis-xia.png"
+            alt="押金侠直立展开法条长卷，用朱笔把证据逐项对应到条款"
             className="min-h-[220px] lg:min-h-[280px]"
-            briefZh={"押金侠 · 角色形象\n翻卷宗 / 可做 2 帧循环\n待画师提供"}
+            briefZh={"押金侠 · 朱笔判案\n正在把证据连到法条"}
           />
           <NowReading facts={facts} />
         </aside>

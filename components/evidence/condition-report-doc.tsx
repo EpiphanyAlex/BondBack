@@ -203,7 +203,7 @@ export function ConditionReportDoc({
     <div
       ref={containerRef}
       className={cx(
-        "overflow-hidden rounded-xl border border-line bg-card",
+        "overflow-hidden border border-line bg-card",
         className,
       )}
     >

@@ -177,7 +177,7 @@ export function BondLodgementFields() {
         </Field>
 
         {payment.paidByInstalments === "yes" ? (
-          <div className="rounded-xl border border-line bg-paper p-3">
+          <div className="border border-line bg-paper p-3">
             <p className="text-label font-medium text-ink">后面几期分别是哪天付的？</p>
             <p className="mt-1 text-caption leading-relaxed text-muted">
               上面填的是首期日期。把能想起来的分期日期都加上，最后一项就是付清日；
@@ -193,7 +193,7 @@ export function BondLodgementFields() {
                   <button
                     type="button"
                     onClick={() => removeInstalmentDate(index)}
-                    className="shrink-0 rounded-lg px-2 py-1 text-caption text-muted"
+                    className="shrink-0 px-2 py-1 text-caption text-muted"
                   >
                     删除
                   </button>
@@ -202,7 +202,7 @@ export function BondLodgementFields() {
               <button
                 type="button"
                 onClick={addInstalmentDate}
-                className="rounded-xl border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
+                className="border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
               >
                 + 加一期
               </button>
@@ -273,7 +273,7 @@ function ClaimNoticeFields() {
   };
 
   return (
-    <div className="rounded-xl border border-line bg-paper p-3">
+    <div className="border border-line bg-paper p-3">
       <label className="flex items-start gap-3">
         <input
           type="checkbox"

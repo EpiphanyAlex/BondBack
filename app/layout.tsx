@@ -115,6 +115,9 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        {/* 规则针对的是 pages/_document 时代的「只对单页生效」问题；
+            这里是 App Router 的根布局，全站共用一次，不适用 */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&display=swap"

@@ -315,7 +315,7 @@ export function EvidenceUploader({
             {evidence.map((item) => (
               <li
                 key={item.id}
-                className="relative overflow-hidden rounded-xl border border-line bg-card"
+                className="relative overflow-hidden border border-line bg-card"
               >
                 {/* 会话内的 dataURL 缩略图，不走远端存储 */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -334,7 +334,7 @@ export function EvidenceUploader({
                   type="button"
                   onClick={() => removeEvidence(item.id)}
                   aria-label={`删除 ${item.fileName}`}
-                  className="absolute right-1 top-1 rounded-full bg-ink/75 px-2 py-0.5 text-micro text-white"
+                  className="absolute right-1 top-1 bg-ink/80 px-2 py-0.5 text-micro text-paper"
                 >
                   删除
                 </button>

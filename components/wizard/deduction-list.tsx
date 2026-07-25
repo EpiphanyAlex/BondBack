@@ -40,10 +40,10 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
   };
 
   return (
-    <div className={highlight ? "prefilled rounded-xl" : ""}>
+    <div className={highlight ? "prefilled " : ""}>
       <ul className="space-y-2.5">
         {draft.deductions.map((item, index) => (
-          <li key={item.id} className="rounded-xl border border-line bg-card p-3">
+          <li key={item.id} className="border border-line bg-card p-3">
             <div className="flex items-center justify-between">
               <span className="font-mono text-micro text-muted">
                 {String(index + 1).padStart(2, "0")}
@@ -52,7 +52,7 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
                 <button
                   type="button"
                   onClick={() => removeRow(item.id)}
-                  className="rounded-lg px-2 py-1 text-caption text-muted"
+                  className="px-2 py-1 text-caption text-muted"
                 >
                   删除
                 </button>
@@ -80,7 +80,7 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
         <button
           type="button"
           onClick={addRow}
-          className="rounded-xl border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
+          className="border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
         >
           + 再加一项
         </button>

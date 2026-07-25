@@ -1,24 +1,25 @@
 /**
- * 首页（04b §1）。
+ * 首页（「江湖战报」稿 §01）。
  *
- * 编排四段：首屏（标题 / 简介 / 双入口 / 一张真实对照卡）→ 三格能力图示 →
- * 愿景橱窗 → 收尾双入口。免责声明由根布局的 `SiteFooter` 常驻，不再重复一份。
+ * 三幕，底色交替 —— 全站只有墨黑与米白两种面：
+ *   第 1 幕 · 墨黑   合体式标题（金额由用户填进标题里）+ 三档结论 + 示例战报
+ *   第 2 幕 · 米白   它怎么判：01/02/03 流水线 + 一张真实对照卡
+ *   收尾   · 墨黑   双入口 + 即将支持
  *
- * 全部是服务端组件，只有 03b 的对照卡自己带 `"use client"` —— 首屏不等 JS。
+ * 免责声明由根布局的 `SiteFooter` 常驻，不再重复一份。
+ * 只有第 1 幕（要接金额输入）与对照卡是客户端组件，其余不等 JS。
  */
 
-import { CapabilityTrio } from "@/components/home/capability-trio";
 import { ClosingCta } from "@/components/home/closing-cta";
 import { HomeHero } from "@/components/home/home-hero";
-import { VisionShowcase } from "@/components/home/vision-showcase";
+import { HowItJudges } from "@/components/home/how-it-judges";
 
 export default function HomePage() {
   return (
-    <div className="pb-8">
+    <>
       <HomeHero />
-      <CapabilityTrio />
-      <VisionShowcase />
+      <HowItJudges />
       <ClosingCta />
-    </div>
+    </>
   );
 }

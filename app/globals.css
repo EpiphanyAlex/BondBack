@@ -211,6 +211,45 @@ body {
   animation: rise-in var(--duration-settle) var(--ease-settle) both;
 }
 
+/* ── 首页第 1 幕的「合体式标题」：金额输入直接长在标题里 ──
+   尺寸一律用 em 跟着 text-hero 一起流体缩放，所以不进 Tailwind 字阶。
+   金额是用户自己填的那个数 —— 标题因此从一句广告语变成他自己的案情。 */
+.hero-amount {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.05em;
+  margin: 0 0.06em;
+  padding: 0 0.16em 0.05em;
+  border-bottom: 0.06em solid var(--gold-bright);
+}
+
+.hero-amount__sign {
+  padding-bottom: 0.13em;
+  font-family: var(--font-number);
+  font-size: 0.6em;
+  line-height: 1;
+  color: var(--gold-bright);
+}
+
+/* 类选择器压得住 globals 里那条 `input { font-size: max(16px,1rem) }` */
+.hero-amount__input {
+  width: 3.6em;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-number);
+  font-size: 1em;
+  line-height: 1;
+  color: var(--gold-bright);
+  caret-color: var(--seal);
+}
+
+.hero-amount__input::placeholder {
+  color: rgb(233 180 76 / 0.3);
+}
+
 /* 「认栽」的删除线首次进入时由左划过（首页第 1 幕） */
 @keyframes strike-through {
   from {

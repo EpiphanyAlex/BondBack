@@ -48,7 +48,6 @@ import {
   shortLabelZh,
   usedFactIdsOf,
 } from "./utils";
-import { VerdictSeal } from "./verdict";
 
 /** 每一幕共用的容器：同一个最大宽度 + 同一组内边距，四幕左边缘才对得齐。 */
 const ACT = "mx-auto w-full max-w-[1152px] px-4 md:px-6";
@@ -168,31 +167,13 @@ export function ResultView({
 
         <ol className="mt-4 flex flex-col gap-4 lg:gap-5">
           {analysis.items.map((item, index) => (
-            <li
-              key={`${item.description}-${index}`}
-              className="lg:grid lg:grid-cols-[minmax(0,840px)_7rem] lg:items-start"
-            >
+            <li key={`${item.description}-${index}`}>
               <ComparisonCard
                 item={item}
                 ordinal={index + 1}
                 facts={analysis.facts}
                 onFactClick={focusFact}
-                sealInMargin
               />
-
-              {/*
-                页边批注：序号 + 结论印章。产品做的事就是逐项判决，所以每一笔
-                在页边被盖一枚章 —— 中文公文用印本来也盖在右侧。
-                `-ml-9` 让章**压在卡片右边缘上**：跨过纸的边界才像盖上去的，
-                悬在旁边就只是一枚贴纸。DOM 在卡片之后，天然盖在上层。
-                手机上没有页边可用，卡内徽章照旧（见 ComparisonCard 的 sealInMargin）。
-              */}
-              <div className="hidden lg:-ml-9 lg:flex lg:flex-col lg:items-center lg:gap-2 lg:pt-5">
-                <VerdictSeal verdict={item.verdict} />
-                <span className="font-mono text-micro uppercase text-muted">
-                  第 {index + 1} 笔
-                </span>
-              </div>
             </li>
           ))}
         </ol>

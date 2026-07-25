@@ -90,7 +90,7 @@ docs/design-tokens.md # 视觉与响应式唯一事实源
 ## 环境
 
 - macOS，Node v24.4.1，pnpm 可用；git 用户名 EpiphanyAlex
-- 部署：<https://bond-back-yanzhuo-lius-projects.vercel.app>
+- 部署：<https://bond-back-psi.vercel.app>
 - 产品 API 用用户已有的 OpenAI key（勿再询问）
 
 ## 建议技能调用时机

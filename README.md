@@ -3,7 +3,7 @@
 > **房东乱扣 Bond？先别认栽。**
 > 上传扣款清单和入住报告，AI 按 NSW/VIC 租赁法规逐项比对证据，告诉你哪几笔不应扣、凭哪条法规，并生成一封可直接发送的英文申诉信。
 
-🔗 **在线体验**：<https://bond-back-yanzhuo-lius-projects.vercel.app>
+🔗 **在线体验**：<https://bond-back-psi.vercel.app>
 🏆 匠人学院 TOP Coder Challenge 04（房地产 × AI）参赛作品
 
 ---

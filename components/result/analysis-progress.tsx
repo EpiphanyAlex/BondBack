@@ -278,15 +278,18 @@ function useElapsed(active: boolean): number {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    if (!active) {
-      setElapsed(0);
-      return;
-    }
+    if (!active) return;
     const started = Date.now();
-    setElapsed(0);
-    const timer = setInterval(() => setElapsed(Date.now() - started), 100);
-    return () => clearInterval(timer);
+    const tick = () => setElapsed(Date.now() - started);
+    // 立刻补一拍：重试时若等满 100ms 才更新，会先闪一下上一轮的秒数
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 100);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
   }, [active]);
 
-  return elapsed;
+  // 归零在渲染期做，不在 effect 里 setState —— 那会多走一趟级联渲染
+  return active ? elapsed : 0;
 }

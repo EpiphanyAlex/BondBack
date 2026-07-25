@@ -36,10 +36,14 @@ export function AppealLetter({
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 重试后拿到新的信 → 用新版本覆盖（编辑态本来就只在本地）
-  useEffect(() => {
+  // 重试后拿到新的信 → 用新版本覆盖（编辑态本来就只在本地）。
+  // 渲染期直接调整而不是走 effect：effect 版本会先把旧信渲染一帧再覆盖，
+  // 编辑框会肉眼可见地闪一下旧内容。
+  const [syncedLetter, setSyncedLetter] = useState(letterEn);
+  if (syncedLetter !== letterEn) {
+    setSyncedLetter(letterEn);
     setText(letterEn);
-  }, [letterEn]);
+  }
 
   useEffect(
     () => () => {

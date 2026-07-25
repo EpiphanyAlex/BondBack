@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Geist, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { CaseSessionProvider } from "@/lib/case-session";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,10 +24,54 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
+/**
+ * OG 的绝对地址基准。微信/Slack 抓 `og:image` 只认绝对 URL，Next 用这个值补全。
+ * 预览部署上要用预览域名 —— 否则在预览里调微信卡片，缩略图会指向还没上线的正式域名。
+ */
+function metadataBase(): URL {
+  const { VERCEL_ENV, VERCEL_URL } = process.env;
+  if (VERCEL_ENV && VERCEL_ENV !== "production" && VERCEL_URL) {
+    return new URL(`https://${VERCEL_URL}`);
+  }
+  return new URL(SITE_URL);
+}
+
+/**
+ * 链接甩进微信群时，卡片 = 标题 + 描述 + 缩略图（05 §微信）。
+ * - 标题走情绪钩子，不是功能说明 —— 群里滑过去只看得见这一行
+ * - 缩略图是 `public/og.png`（`pnpm og` 本地烤好的静态图）。**微信会把它居中裁成
+ *   正方形**，所以图上「押金侠」三个字是居中的，裁完照样认得出
+ * - 描述压到两行以内，微信超了直接截断
+ */
 export const metadata: Metadata = {
-  title: "押金侠 BondBack｜租房押金维权助手",
+  metadataBase: metadataBase(),
+  title: "押金侠 BondBack｜房东乱扣 Bond？先别认栽",
   description:
     "面向澳洲 NSW / VIC 租客的信息辅助工具：三步向导整理证据、评估胜算、生成英文维权信。不构成法律意见。",
+  openGraph: {
+    type: "website",
+    locale: "zh_CN",
+    url: "/",
+    siteName: "押金侠 BondBack",
+    title: "押金侠 BondBack｜房东乱扣 Bond？先别认栽",
+    description:
+      "上传扣款清单和入住报告，AI 按 NSW/VIC 租赁法逐项比对，指出哪几笔不该扣、凭哪条法规，并生成英文申诉信。信息辅助，不构成法律意见。",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "押金侠 BondBack —— 按 NSW / VIC 租赁法逐项比对押金扣款",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "押金侠 BondBack｜房东乱扣 Bond？先别认栽",
+    description:
+      "上传扣款清单和入住报告，AI 按 NSW/VIC 租赁法逐项比对，指出哪几笔不该扣、凭哪条法规，并生成英文申诉信。",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {

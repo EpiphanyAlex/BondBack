@@ -20,10 +20,11 @@ import { toPng } from "html-to-image";
 import { toDataURL } from "qrcode";
 
 import { cx, formatMoney, money } from "@/components/result/utils";
+import { SITE_URL } from "@/lib/site";
 import type { AnalysisLedger } from "@/lib/types";
 
-/** 二维码指向部署地址。 */
-export const SHARE_URL = "https://bond-back-yanzhuo-lius-projects.vercel.app";
+/** 二维码指向部署地址（与 OG meta 共用 `lib/site.ts` 这一处事实源）。 */
+export const SHARE_URL = SITE_URL;
 
 /** 二维码位图边长（PNG 里的实际像素）；卡上按 88px 显示，不会被放大糊掉。 */
 const QR_PIXELS = 264;

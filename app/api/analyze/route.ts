@@ -30,7 +30,7 @@ import {
   ANALYZE_SYSTEM_PROMPT,
   buildAnalyzeUserText,
 } from "@/lib/prompts/analyze";
-import { checkRateLimit, clientKeyFromHeaders } from "@/lib/rate-limit";
+import { bodyTooLarge, checkRateLimit, clientKeyFromHeaders } from "@/lib/rate-limit";
 import type { AnalysisResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -40,12 +40,19 @@ const RATE_LIMIT = 6;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const ANALYZE_TIMEOUT_MS = 48_000;
 
+/**
+ * 这一段只吃文本（客户端已剥掉 dataUrl），正常请求几十 KB 就到顶。
+ * 超过 2MB 只可能是客户端 bug 或有人在灌请求 —— 直接拒，不进 JSON.parse。
+ */
+const ANALYZE_MAX_BODY_BYTES = 2 * 1024 * 1024;
+
 type Diagnostic =
   | "ok"
   | "ai-disabled"
   | "rate-limited"
   | "burden-shift"
   | "model-error"
+  | "payload-too-large"
   | "bad-request";
 
 function errorSummary(error: unknown): string {
@@ -76,6 +83,13 @@ export async function POST(request: Request): Promise<Response> {
   const wantsDetail = new URL(request.url).searchParams.get("diag") === "1";
   const detailOf = (error: unknown) =>
     wantsDetail ? errorSummary(error) : undefined;
+
+  if (bodyTooLarge(request.headers, ANALYZE_MAX_BODY_BYTES)) {
+    return Response.json(
+      { error: "payload-too-large", diagnostic: "payload-too-large" satisfies Diagnostic },
+      { status: 413 },
+    );
+  }
 
   let parsed: ReturnType<typeof parseAnalyzeRequest> = null;
 

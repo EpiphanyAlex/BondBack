@@ -18,7 +18,7 @@ import {
   isAiEnabled,
 } from "@/lib/ai";
 import { EXTRACT_JSON_SCHEMA, parseExtractPayload } from "@/lib/extract-schema";
-import { checkRateLimit, clientKeyFromHeaders } from "@/lib/rate-limit";
+import { bodyTooLarge, checkRateLimit, clientKeyFromHeaders } from "@/lib/rate-limit";
 import type { EvidenceKind, ExtractResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -26,6 +26,9 @@ export const maxDuration = 30;
 
 const RATE_LIMIT = 12;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
+
+/** 整个请求体的硬上限：在 EXTRACT_MAX_PAYLOAD_BYTES 之上留 JSON 包装的余量 */
+const EXTRACT_MAX_BODY_BYTES = 12 * 1024 * 1024;
 
 const ALLOWED_IMAGE_PREFIXES = [
   "data:image/jpeg;base64,",
@@ -213,6 +216,10 @@ export async function POST(request: Request): Promise<Response> {
       RATE_WINDOW_MS,
     );
     if (!limit.ok) return respond({}, "rate-limited");
+
+    if (bodyTooLarge(request.headers, EXTRACT_MAX_BODY_BYTES)) {
+      return respond({}, "payload-too-large");
+    }
 
     const body = (await request.json()) as { images?: unknown };
     const images = selectImages(body.images);

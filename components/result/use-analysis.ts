@@ -129,6 +129,8 @@ function factsDetail(diagnostic: string, count: number): string {
       return "识别未启用，跳过这一段";
     case "rate-limited":
       return "请求太频繁，这一段没读成";
+    case "payload-too-large":
+      return "证据体积超上限，这一段没读成";
     default:
       return "这一段没读成，下面按举证责任翻转处理";
   }

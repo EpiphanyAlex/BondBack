@@ -7,19 +7,20 @@ import type { AUState, DisputeType } from "@/lib/types";
 
 import { ChipGroup, ChoiceGroup, SectionCard, type Choice } from "./fields";
 
-/** 其余州和领地照 PRD 要求显示但禁用 */
-type StateChoiceValue = AUState | "QLD" | "WA" | "SA" | "TAS" | "ACT" | "NT";
-
-const STATE_CHOICES: Choice<StateChoiceValue>[] = [
+/** 真正能选的两个州 */
+const STATE_CHOICES: Choice<AUState>[] = [
   { value: "NSW", label: "新南威尔士 NSW", hint: "悉尼等" },
   { value: "VIC", label: "维多利亚 VIC", hint: "墨尔本等" },
-  { value: "QLD", label: "昆士兰 QLD", disabled: true, disabledNote: "即将支持" },
-  { value: "WA", label: "西澳 WA", disabled: true, disabledNote: "即将支持" },
-  { value: "SA", label: "南澳 SA", disabled: true, disabledNote: "即将支持" },
-  { value: "TAS", label: "塔州 TAS", disabled: true, disabledNote: "即将支持" },
-  { value: "ACT", label: "首都领地 ACT", disabled: true, disabledNote: "即将支持" },
-  { value: "NT", label: "北领地 NT", disabled: true, disabledNote: "即将支持" },
 ];
+
+/**
+ * 其余州和领地照 PRD 要求「显示但禁用，标即将支持」。
+ *
+ * 原先它们和 NSW / VIC 一样是六张等大的禁用卡，各自带一行「即将支持」——
+ * 结果**选不了的东西占掉了选择区四分之三**，还把「即将支持」说了六遍。
+ * 压成一行不可点的小标签：显示到位、禁用到位，「即将支持」作为组标签说一次。
+ */
+const UPCOMING_STATES = ["QLD", "WA", "SA", "TAS", "ACT", "NT"];
 
 const DISPUTE_CHOICES: Choice<DisputeType>[] = [
   { value: "cleaning", label: "清洁费" },
@@ -45,25 +46,32 @@ export function StepBasics() {
     <div className="space-y-4">
       <SectionCard
         title="你在哪个州租房？"
-        hint="押金规则、机构和时限每个州都不一样，先选对州，后面的分析才作数。"
+        hint="押金规则和时限各州不同，选错后面的分析不作数。"
       >
         <ChoiceGroup
           ariaLabel="选择所在州"
           columns={2}
           choices={STATE_CHOICES}
           value={draft.state}
-          onChange={(value) => {
-            if (value === "NSW" || value === "VIC") {
-              updateDraft({ state: value });
-            }
-          }}
+          onChange={(value) => updateDraft({ state: value })}
         />
+
+        <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1.5">
+          <span className="font-mono text-micro uppercase text-muted">
+            即将支持
+          </span>
+          {UPCOMING_STATES.map((code) => (
+            <span
+              key={code}
+              className="rounded-full border border-dashed border-line px-2.5 py-0.5 font-mono text-caption text-muted"
+            >
+              {code}
+            </span>
+          ))}
+        </p>
       </SectionCard>
 
-      <SectionCard
-        title="哪些扣款让你不服？"
-        hint="可以多选。一次退租常常好几笔，分析会逐项给结论。"
-      >
+      <SectionCard title="哪些扣款让你不服？" hint="可以多选。">
         <ChipGroup
           ariaLabel="选择纠纷类型"
           choices={DISPUTE_CHOICES}
@@ -72,8 +80,7 @@ export function StepBasics() {
         />
         {draft.disputeTypes.includes("rent-arrears") ? (
           <p className="mt-3 text-caption leading-relaxed text-muted">
-            提前说明：拖欠租金抵扣通常是房东占理。真是这样，分析会直接告诉你「合法，
-            别争」——把力气留给能赢的项。
+            拖欠租金抵扣通常房东占理，分析会直说「合法，别争」。
           </p>
         ) : null}
       </SectionCard>

@@ -19,7 +19,6 @@ import Link from "next/link";
 import { ReplayStage } from "@/components/replay/replay-stage";
 import { useReplay } from "@/components/replay/use-replay";
 import { ResultView } from "@/components/result/result-view";
-import { money } from "@/components/result/utils";
 import { WarCardShare } from "@/components/share/war-card";
 import {
   SAMPLE_ANALYSIS,
@@ -32,12 +31,14 @@ import {
  * 卡片旁边的说明。措辞纪律同战报卡：说的是「找出可争议扣款」，
  * 不承诺钱会回来（军规：对外文案避免绝对化承诺）。
  * 数字一律从常量算，不手抄。
+ *
+ * 原来是四段整句（约 160 字），可那张卡上已经写着押金、索扣、可争议三个数字，
+ * 旁边再用一整段把同样的数字读一遍是重复。只留两条卡上没有的信息：
+ * 二维码通向哪里，以及这些材料是虚构的（后者是军规）。
  */
 const SHARE_NOTES = [
-  `卡上的数字全部来自这个示例案例：押金 ${money(SAMPLE_CASE_INPUT.bondAmount)}、房东索扣 ${money(SAMPLE_ANALYSIS.ledger.claimedTotal)}，其中 ${money(SAMPLE_ANALYSIS.ledger.disputableTotal)} 找得出可以争的依据。`,
-  "二维码指向这个工具本身。对方扫开后可以上传自己的扣款清单和入住报告，跑出属于他的那张卡。",
-  "这里所有的文件、当事人、地址与押金号都是虚构的，只用于演示对照能力。",
-  "工具做的是帮你定位可争议的扣款、把法条摆出来，不构成法律意见，也不代表结果一定如此。",
+  "二维码指向这个工具，对方扫开就能跑自己的扣款单。",
+  "文件、当事人、地址与押金号全部虚构，仅用于演示。",
 ];
 
 export default function SamplePage() {
@@ -70,12 +71,11 @@ export default function SamplePage() {
       />
 
       <section className="mx-auto w-full max-w-[1152px] px-4 pb-10 md:px-6">
-        <h2 className="text-section text-ink">带走这张战报卡</h2>
-        <p className="mt-1 max-w-[720px] text-caption leading-relaxed text-muted">
-          转发给正在纠结要不要认栽的室友或朋友。扫码就能打开这个工具，
-          用他们自己的扣款清单跑一遍。
+        <h2 className="text-title text-ink">带走这张战报卡</h2>
+        <p className="mt-1.5 max-w-[520px] text-label leading-relaxed text-muted">
+          转发给还在纠结要不要认栽的室友。
         </p>
-        <div className="mt-3 lg:grid lg:grid-cols-[380px_1fr] lg:items-start lg:gap-8">
+        <div className="mt-4 lg:grid lg:grid-cols-[360px_minmax(0,420px)] lg:items-start lg:gap-8">
           <WarCardShare
             sample
             bondAmount={SAMPLE_CASE_INPUT.bondAmount}
@@ -84,11 +84,11 @@ export default function SamplePage() {
             statuteCount={SAMPLE_STATUTE_COUNT}
             stateLabel={SAMPLE_CASE_INPUT.state}
           />
-          <ul className="mt-4 flex max-w-[520px] flex-col gap-2 lg:mt-0">
+          <ul className="mt-4 flex flex-col gap-2 lg:mt-0">
             {SHARE_NOTES.map((note) => (
               <li
                 key={note}
-                className="rounded-xl border border-line bg-card px-3.5 py-2.5 text-caption leading-relaxed text-muted"
+                className="border-l-2 border-line pl-3 text-label leading-relaxed text-muted"
               >
                 {note}
               </li>

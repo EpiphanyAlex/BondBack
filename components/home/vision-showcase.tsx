@@ -1,65 +1,44 @@
 /**
  * 愿景橱窗（04b §1 末段）。
  *
- * 红线：措辞一律是「即将支持」，**不得暗示当前可用** —— 所以每一条都带
- * 「未上线」角标，区块开头和结尾各说一次「现在还用不了」。
- * 这里只讲方向，不讲时间表（对外文案避免绝对化承诺）。
+ * 红线：措辞一律是「即将支持」，**不得暗示当前可用**。
+ *
+ * **压回一行。** `docs/prd/06-move-in-mode.md:18` 给的形态本来就是一行：
+ * 「即将支持：QLD / WA · 入住留证（…） · 中介往来助手」。原实现把它铺成三张
+ * 虚线卡 + 前后各一段「现在还用不了」+ 一段重复的免责声明，约 250 字 ——
+ * 一个讲「这些还不能用」的区块占掉首页近两成文字量，是本末倒置。
+ * 「未上线」的信息由 `即将支持` 这个标签本身承担，说一次就够。
  */
 
 const UPCOMING = [
-  {
-    titleZh: "QLD / WA 州法规",
-    bodyZh:
-      "当前版本只覆盖 NSW 与 VIC 两州的租赁法。其他州的法条正在按同一套「原文 + 官方来源」的标准整理。",
-  },
-  {
-    titleZh: "入住留证",
-    bodyZh:
-      "搬进去那天就把房况拍好、存好、标好日期。退租时房东说的「这是你弄坏的」，当场就有对照。",
-  },
-  {
-    titleZh: "中介往来助手",
-    bodyZh:
-      "把和中介的邮件、消息整理成一条时间线，谁在哪天说过什么一目了然，写申诉信时直接取用。",
-  },
+  { titleZh: "QLD / WA", noteZh: "其余各州法规" },
+  { titleZh: "入住留证", noteZh: "入住当天拍照存档" },
+  { titleZh: "中介往来助手", noteZh: "邮件消息理成时间线" },
 ];
 
 export function VisionShowcase() {
   return (
     <section className="mx-auto w-full max-w-[1152px] px-4 pt-10 pb-4 md:px-6 md:pt-12">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-title text-ink">即将支持</h2>
+        <h2 className="text-section text-ink">即将支持</h2>
         <p className="font-mono text-micro uppercase text-muted">
-          以下功能尚未上线
+          尚未上线，别按它们安排退租
         </p>
       </div>
-      <p className="mt-1.5 text-label leading-relaxed text-muted">
-        下面三项还在开发中，当前版本不提供，也不要按它们来安排你的退租时间。
-      </p>
 
-      <ul className="mt-4 grid gap-3 lg:grid-cols-3">
+      <ul className="mt-3 flex flex-wrap gap-2">
         {UPCOMING.map((item) => (
           <li
             key={item.titleZh}
-            className="rounded-2xl border border-dashed border-line bg-card px-4 py-4 md:px-5"
+            className="flex items-baseline gap-2 rounded-full border border-dashed border-line bg-card px-3.5 py-1.5"
           >
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <p className="text-section text-ink">{item.titleZh}</p>
-              <span className="rounded-full border border-line px-2 py-0.5 font-mono text-micro uppercase text-muted">
-                即将支持
-              </span>
-            </div>
-            <p className="mt-2 text-label leading-relaxed text-muted">
-              {item.bodyZh}
-            </p>
+            <span className="text-label font-semibold text-ink">
+              {item.titleZh}
+            </span>
+            <span className="text-caption text-muted">{item.noteZh}</span>
           </li>
         ))}
       </ul>
-
-      <p className="mt-4 text-caption leading-relaxed text-muted">
-        现在能用的是：NSW / VIC 两州的逐项对照、英文申诉信与行动路线。
-        本工具提供信息辅助，不构成法律意见，金额与法条请在发出前自行复核。
-      </p>
     </section>
   );
 }

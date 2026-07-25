@@ -51,7 +51,10 @@ export default function SamplePage() {
         analysis={SAMPLE_ANALYSIS}
         beats={SAMPLE_REPLAY_TIMELINE}
         firedCount={replay.firedCount}
+        paused={replay.paused}
         onSkip={replay.skip}
+        onTogglePause={replay.togglePause}
+        onRestart={replay.restart}
       />
     );
   }
@@ -70,12 +73,12 @@ export default function SamplePage() {
         }
       />
 
-      <section className="mx-auto w-full max-w-[1152px] px-4 pb-10 md:px-6">
-        <h2 className="text-title text-ink">带走这张战报卡</h2>
-        <p className="mt-1.5 max-w-[520px] text-label leading-relaxed text-muted">
+      <section className="mx-auto w-full max-w-[1152px] border-t border-line px-4 pb-12 pt-9 md:px-6">
+        <h2 className="h-shout text-title text-ink">带走这张战报卡</h2>
+        <p className="mt-2 max-w-[520px] text-label text-muted">
           转发给还在纠结要不要认栽的室友。
         </p>
-        <div className="mt-4 lg:grid lg:grid-cols-[360px_minmax(0,420px)] lg:items-start lg:gap-8">
+        <div className="mt-5 lg:grid lg:grid-cols-[360px_minmax(0,420px)] lg:items-start lg:gap-8">
           <WarCardShare
             sample
             bondAmount={SAMPLE_CASE_INPUT.bondAmount}
@@ -88,7 +91,7 @@ export default function SamplePage() {
             {SHARE_NOTES.map((note) => (
               <li
                 key={note}
-                className="border-l-2 border-line pl-3 text-label leading-relaxed text-muted"
+                className="border-l-2 border-line pl-3.5 text-label text-muted"
               >
                 {note}
               </li>
@@ -109,24 +112,24 @@ function SampleBanner({
   showReplay: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-line bg-card px-3.5 py-2.5">
-      <p className="min-w-0 text-caption leading-relaxed text-muted">
-        <span className="font-mono text-micro uppercase text-ink">示例案例</span>{" "}
-        —— 这是预载示例，文件与当事人全部虚构；你的案子会实时分析。
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-l-[3px] border-l-alert-verify bg-verdict-doubtful-wash px-4 py-3">
+      <p className="min-w-0 text-caption text-muted">
+        <span className="font-mono text-micro text-ink">示例案例</span> ——
+        这是预载示例，文件与当事人全部虚构；你的案子会实时分析。
       </p>
-      <div className="flex shrink-0 flex-wrap gap-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-4">
         {showReplay ? (
           <button
             type="button"
             onClick={onReplay}
-            className="rounded-lg border border-line bg-card px-3 py-1.5 text-caption font-medium text-ink transition-colors duration-150 hover:bg-paper"
+            className="font-mono text-micro text-ink underline underline-offset-4"
           >
             再看一遍重放
           </button>
         ) : null}
         <Link
           href="/wizard"
-          className="rounded-lg bg-ink px-3 py-1.5 text-caption font-medium text-white"
+          className="bg-ink px-4 py-2 text-caption font-bold text-paper"
         >
           换成我的案子 →
         </Link>

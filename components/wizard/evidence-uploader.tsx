@@ -239,7 +239,7 @@ export function EvidenceUploader({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-5">
       <div>
         {ALL_SLOTS.map((slot) => (
           <input
@@ -263,19 +263,21 @@ export function EvidenceUploader({
         type="button"
         onClick={() => inputsRef.current[HERO_SLOT.kind]?.click()}
         disabled={remainingSlots <= 0}
-        className="w-full rounded-2xl border border-ink bg-card p-4 text-left transition active:scale-[0.99] disabled:opacity-40"
+        className="flex w-full items-center gap-6 border-2 border-dashed border-seal/55 bg-seal/5 px-6 py-7 text-left transition-colors duration-150 hover:bg-seal/10 disabled:opacity-40"
       >
-        <span className="inline-block rounded-full bg-ink px-2.5 py-1 font-mono text-micro uppercase text-white">
-          最关键
+        {/* 稿子里的落点是一个大朱红「＋」，不是又一张描边卡 */}
+        <span className="font-number text-title leading-none text-verdict-unlawful">
+          ＋
         </span>
-        <span className="mt-2.5 block text-section text-ink">
-          + {HERO_SLOT.label}
+        <span className="min-w-0">
+          <span className="block text-section font-bold text-ink">
+            拖进来，或点击选择 · {HERO_SLOT.label}
+          </span>
+          <span className="mt-1.5 block text-label text-muted">
+            扣款清单 / 入住报告 / 租约 / 聊天截图 · PDF 与图片都行。
+            入住报告最关键 —— 它能推翻大多数扣款。
+          </span>
         </span>
-        <span className="mt-1.5 block text-label leading-relaxed text-muted">
-          这一份最关键：它能推翻大多数扣款。入住时就记在上面的污渍和划痕，
-          现在算不到你头上。
-        </span>
-        <span className="mt-2 block text-caption text-muted">{HERO_SLOT.hint}</span>
       </button>
 
       <div className="grid grid-cols-2 gap-2">
@@ -285,7 +287,7 @@ export function EvidenceUploader({
             type="button"
             onClick={() => inputsRef.current[slot.kind]?.click()}
             disabled={remainingSlots <= 0}
-            className="h-full w-full rounded-xl border border-dashed border-line bg-card px-3 py-3.5 text-left transition active:scale-[0.99] disabled:opacity-40"
+            className="h-full w-full border border-line bg-card px-3.5 py-3.5 text-left transition-colors duration-150 hover:border-ink/40 disabled:opacity-40"
           >
             <span className="block text-label font-medium text-ink">
               + {slot.label}
@@ -366,7 +368,7 @@ function StatusLine({ status }: { status: Status }) {
   }
 
   return (
-    <div className="prefilled rounded-xl border border-gold-bright/50 px-3.5 py-3">
+    <div className="prefilled border-l-[3px] border-l-alert-verify bg-verdict-doubtful-wash px-4 py-3.5">
       <p className="text-label font-medium text-ink">
         已根据你的证据自动填好 {status.fields.length} 项
       </p>
@@ -374,7 +376,7 @@ function StatusLine({ status }: { status: Status }) {
         {status.fields.map((field) => (
           <li
             key={field}
-            className="rounded-full bg-verdict-doubtful-wash px-2.5 py-1 font-mono text-micro text-verdict-doubtful"
+            className="border border-alert-verify/40 px-2.5 py-1 font-mono text-micro text-verdict-doubtful"
           >
             {PREFILL_FIELD_LABELS[field]}
           </li>

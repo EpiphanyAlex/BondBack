@@ -71,7 +71,7 @@ export function StepBasics() {
           onToggle={toggleDispute}
         />
         {draft.disputeTypes.includes("rent-arrears") ? (
-          <p className="mt-3 text-xs leading-relaxed text-muted">
+          <p className="mt-3 text-caption leading-relaxed text-muted">
             提前说明：拖欠租金抵扣通常是房东占理。真是这样，分析会直接告诉你「合法，
             别争」——把力气留给能赢的项。
           </p>

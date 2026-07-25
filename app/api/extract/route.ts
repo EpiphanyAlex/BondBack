@@ -36,14 +36,17 @@ const ALLOWED_IMAGE_PREFIXES = [
 
 /** 含字段信息的概率从高到低——只把最有价值的几张送进模型，控成本。 */
 const KIND_PRIORITY: Record<string, number> = {
-  lease: 0,
-  "condition-report": 1,
-  chat: 2,
-  other: 3,
-  room: 4,
+  // 扣款清单一张就能填满 claimedAmount + deductions，优先级最高
+  "deduction-notice": 0,
+  lease: 1,
+  "condition-report": 2,
+  chat: 3,
+  other: 4,
+  room: 5,
 };
 
 const KIND_HINT_ZH: Record<string, string> = {
+  "deduction-notice": "房东/中介的扣款清单（bond deduction notice）",
   lease: "租约（lease agreement）",
   "condition-report": "入住/退租 condition report",
   chat: "与房东或中介的聊天/邮件截图",
@@ -170,8 +173,9 @@ async function callModel(
   const completion = await client.chat.completions.create(
     {
       model: EXTRACT_MODEL,
-      temperature: 0,
-      max_tokens: 800,
+      // gpt-5.x 拒绝 max_tokens（400 unsupported_parameter），冒烟已确认
+      max_completion_tokens: 2000,
+      reasoning_effort: "low",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: buildContent(images) },

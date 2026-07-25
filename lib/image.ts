@@ -67,7 +67,7 @@ export function drawToJpegDataUrl(
   if (!context) throw new Error("canvas 不可用");
 
   // 白底：截图常带透明通道，转 JPEG 后会变黑
-  context.fillStyle = "#ffffff";
+  context.fillStyle = "#ffffff"; // token-ok: canvas 底色，非 UI 配色
   context.fillRect(0, 0, width, height);
   context.drawImage(source, 0, 0, width, height);
 

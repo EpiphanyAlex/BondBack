@@ -250,32 +250,55 @@ pnpm check:tokens
 
 ## 7. 前置阶段落地清单（03a/03b/04a/04b 扇出前必须全勾）
 
+> **状态：✅ 四组全勾（2026-07-25），已具备扇出资格。**
+
 这一节是工单。**它不只是 token——它是所有并行工作的契约冻结点。**顺序执行：
 
 ### 7.1 视觉层
 
-- [ ] §5 的 `@theme` 块写入 `app/globals.css`（材质色留在 `:root`，语义层在 `@theme inline` 引用）
-- [ ] `app/layout.tsx` 加 `<meta name="color-scheme" content="light">`
-- [ ] `package.json` 加 `"check:tokens"` 脚本
-- [ ] 按 §1 对照表收编现有 27 处任意字号（主要在 `components/wizard/**` 与 `components/wizard/ledger-bar.tsx`）
-- [ ] `pnpm check:tokens` 跑通并清零
-- [ ] `pnpm build` 通过（确认 `--breakpoint-*: initial` 与 `clamp()` 编译无误）
+- [x] §5 的 `@theme` 块写入 `app/globals.css`（材质色留在 `:root`，语义层在 `@theme inline` 引用）
+- [x] `app/layout.tsx` 声明 `color-scheme: light` —— 走 `viewport` 导出而非手写 `<head>`，由 Next 保证标签只出现一次
+- [x] `package.json` 加 `"check:tokens"` 脚本（实现见 `scripts/check-tokens.mjs`）
+- [x] 按 §1 对照表收编任意字号：31 处 `text-[…]` + 33 处 Tailwind 自带档位（`text-sm`/`text-xs`/`text-2xl`/`text-4xl`），一并收编
+- [x] `pnpm check:tokens` 跑通并清零
+- [x] `pnpm build` 通过（`--breakpoint-*: initial` 与 `clamp()` 编译无误）
+
+顺带做掉的迁移：`@theme` 删掉了 `background`/`foreground`/`brand`/`gold`/`seal`/`jade` 这批直用材质色，
+调用点改成语义别名（`bg-paper`、`text-ink`、`border-line`、`text-amount-hero`、
+`bg-verdict-doubtful-wash`、`border-alert-risk/35` 等）。
+
+`check:tokens` 扫五类：任意字号、非 7 档字号、禁用断点、`.ts(x)` 里的 `#hex`、行内 ms 时长；
+另对 `tracking-[…]` 出软提醒（0.14em 已内建进 `text-micro`）。
+**唯一逃生舱**是行尾 `// token-ok: 理由`，只给拿不到 CSS 变量的非 UI 层（canvas 填充色、
+浏览器 chrome 色）——目前全项目只有 3 处。整行注释不参与扫描。
 
 ### 7.2 契约冻结（**冻结后任何 agent 不得再改这两个文件**）
 
-- [ ] `lib/types.ts`：按 `docs/prd/03a-analysis-pipeline.md` 与 `03b-result-page.md` 补齐 `EvidenceFact`、`EvidenceRef`、`StatuteRef`（加 `quote`/`sourceUrl`）、`AnalysisItem.checks`、`AnalysisItem.evidenceRefs`、`AnalysisItem.disputableAmount`、`AnalysisItem.paragraphEn`、`AnalysisResult.mode`、`AnalysisResult.facts`、`AnalysisResult.ledger`、`ReplayBeat`
-- [ ] `lib/ai.ts`：三个模型常量 `EXTRACT_MODEL='gpt-5.4-nano'`、`FACTS_MODEL='gpt-5.6-luna'`、`ANALYZE_MODEL='gpt-5.6-luna'`
+- [x] `lib/types.ts`：`EvidenceFact`、`EvidenceRef`、`StatuteRef`（加 `quote`/`sourceUrl`）、`AnalysisChecks`、`AnalysisItem.{checks,evidenceRefs,disputableAmount,paragraphEn}`、`AnalysisResult.{mode,facts,ledger}`、`AnalysisLedger`、`ReplayBeat` 全部就位
+- [x] `EVIDENCE_KINDS` 加 `deduction-notice`（02-wizard.md 的契约里写了它，代码里原先没有）
+- [x] `lib/ai.ts`：`EXTRACT_MODEL='gpt-5.4-nano'`、`FACTS_MODEL='gpt-5.6-luna'`、`ANALYZE_MODEL='gpt-5.6-luna'`
+
+两处顺带修正：
+- `AnalysisItem.reasoning_zh` → `reasoningZh`（03a/03b/04a 三份工单都写的是 camelCase，且与 `bondLodgementAlert.reasoningZh` 一致）
+- `AnalysisLedger` 是**六个**数字，押金总额不在里面——它是 `CaseInput.bondAmount`，`refundExpected = bondAmount − lawfulTotal`
 
 ### 7.3 依赖一次装完（**避免多个 agent 同时 `pnpm add` 打烂 lockfile**）
 
-- [ ] `pnpm add jspdf html-to-image qrcode`（+ `@types/qrcode`）
+- [x] `jspdf@4.2.1`、`html-to-image@1.11.13`、`qrcode@1.5.4`、`@types/qrcode@1.5.6`
 
 ### 7.4 模型冒烟测试（读不准就没有第二层）
 
-- [ ] 参数：确认 gpt-5.x 接受 `max_completion_tokens` + `reasoning_effort`，拒绝 `max_tokens`
-- [ ] structured outputs：JSON schema 严格模式可用
-- [ ] 延迟：单次 `FACTS_MODEL` 调用（4 张图）在 `maxDuration = 60` 内有充足余量
-- [ ] 读取能力：能从一张扫描版入住报告里准确读出 `existing stains` 那一行
-- [ ] 读不准 → 沿升级梯子把 `FACTS_MODEL` 升到 `gpt-5.6-terra` 再测
+- [x] 参数：`max_tokens` 被拒（`400 unsupported_parameter: use max_completion_tokens`）；`max_completion_tokens` + `reasoning_effort: 'low'` 通过；`temperature: 0` 目前仍被接受（但没必要设）
+- [x] structured outputs：`json_schema` + `strict: true` 可用
+- [x] 延迟：`FACTS_MODEL` 读 4 张图 **4.9s**（`maxDuration = 60` 余量充足），`reasoning_effort: 'low'` 即可；~3.9k prompt tokens
+- [x] 读取能力：一张**倾斜 + JPEG 降质**的扫描版入住报告，两次独立运行都准确读出 `existing stains noted`；扣款三笔金额、租约 `professionally cleaned` 条款、聊天里的 `garden looks fine` 全中
+- [x] **否命题也读对了**：正确输出「已读租约页面中未见园艺/草坪维护条款」这条中文事实——这正是卡② `contractObligation: 'absent'` 判定的依据
+- [x] 不需要升级梯子，`FACTS_MODEL` 保持 `gpt-5.6-luna`
+
+提示词纪律经真调用验证有效，值得 03a 沿用：「只记录看得见的东西 / 读不清就不输出 /
+每条给 `locator` + `quote` / 唯一例外是记录『某物缺失』时用中文陈述（没有原文可引）」。
+
+`/api/extract` 同步改掉了被拒的 `max_tokens`，并把 `deduction-notice` 设为送模型的最高优先级
+（一张扣款清单就能填满 `claimedAmount` + `deductions`）。live 验证：两张图 **3.8s** 填出全部 5 个字段。
 
 **四组全勾 = 具备扇出资格。** 未勾就扇出，会得到三套互不一致的视觉、三种猜出来的红色，以及一个被并发写坏的 lockfile。

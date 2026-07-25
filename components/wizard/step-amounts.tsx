@@ -1,6 +1,6 @@
 "use client";
 
-/** 第 2 步：金额、退租日期、扣款明细、押金存管核实。 */
+/** 金额、退租日期、扣款明细、押金存管核实。上传优先后由第 3 步（StepReview）承载。 */
 
 import { useCaseSession } from "@/lib/case-session";
 import { deductionTotal, parseAmount } from "@/lib/case-draft";
@@ -118,7 +118,7 @@ export function StepAmounts({
       >
         <DeductionList highlight={filled("deductions")} />
         {totalMismatch ? (
-          <p className="mt-3 text-xs leading-relaxed text-muted">
+          <p className="mt-3 text-caption leading-relaxed text-muted">
             明细合计 ${total?.toLocaleString("en-AU")} 和你填的被扣金额对不上。
             不影响继续，分析时会以明细为准逐项判断。
           </p>

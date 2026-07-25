@@ -21,17 +21,31 @@ import {
 import { pdfToImages } from "@/lib/pdf-to-images";
 import type { EvidenceImage, EvidenceKind, ExtractResult } from "@/lib/types";
 
-const UPLOAD_SLOTS: {
+interface UploadSlot {
   kind: EvidenceKind;
   label: string;
   hint: string;
   accept: string;
-}[] = [
+}
+
+/**
+ * 入住报告置顶单独成卡（02-wizard.md v1.1 §2）：它是唯一能证明「入住时就有」的
+ * 材料，一份就能推翻大多数扣款，值得占满一行并配说服文案。
+ */
+const HERO_SLOT: UploadSlot = {
+  kind: "condition-report",
+  label: "入住 condition report",
+  hint: "PDF 或照片都行 · 手机翻拍的也认",
+  accept: "application/pdf,image/*",
+};
+
+/** 扣款清单排在其余证据之首：一张就能填满金额与逐笔明细，预填收益最高。 */
+const UPLOAD_SLOTS: UploadSlot[] = [
   {
-    kind: "chat",
-    label: "聊天 / 邮件截图",
-    hint: "对方说要扣多少钱的那条",
-    accept: "image/*",
+    kind: "deduction-notice",
+    label: "扣款清单 / 结算单",
+    hint: "一张就能填满金额和明细",
+    accept: "application/pdf,image/*",
   },
   {
     kind: "lease",
@@ -40,10 +54,10 @@ const UPLOAD_SLOTS: {
     accept: "application/pdf,image/*",
   },
   {
-    kind: "condition-report",
-    label: "入住 condition report",
-    hint: "证明原来就有的痕迹",
-    accept: "application/pdf,image/*",
+    kind: "chat",
+    label: "聊天 / 邮件截图",
+    hint: "对方说要扣多少钱的那条",
+    accept: "image/*",
   },
   {
     kind: "room",
@@ -53,10 +67,13 @@ const UPLOAD_SLOTS: {
   },
 ];
 
+const ALL_SLOTS: UploadSlot[] = [HERO_SLOT, ...UPLOAD_SLOTS];
+
 const KIND_LABEL: Record<EvidenceKind, string> = {
-  chat: "聊天截图",
-  lease: "租约",
   "condition-report": "入住报告",
+  "deduction-notice": "扣款清单",
+  lease: "租约",
+  chat: "聊天截图",
   room: "房间照片",
   other: "其他",
 };
@@ -147,14 +164,14 @@ export function EvidenceUploader({
       } else {
         setStatus({
           phase: "quiet",
-          note: "这几张图里没读到可以填的字段，手动填一下就行。",
+          note: "这几张图里没读到可以填的字段，下一步手动填一下就行。",
         });
       }
     } catch {
       // 断网、超时、模型跑偏都走这里：证据留着，流程照常
       setStatus({
         phase: "quiet",
-        note: "这次没能自动识别，手动填一下就行，不影响后面的分析。",
+        note: "这次没能自动识别，下一步手动填一下就行，不影响后面的分析。",
       });
     }
   }
@@ -223,36 +240,60 @@ export function EvidenceUploader({
 
   return (
     <div className="space-y-4">
+      <div>
+        {ALL_SLOTS.map((slot) => (
+          <input
+            key={slot.kind}
+            ref={(node) => {
+              inputsRef.current[slot.kind] = node;
+            }}
+            type="file"
+            accept={slot.accept}
+            multiple
+            className="sr-only"
+            onChange={(event) => {
+              void handleFiles(event.target.files, slot.kind);
+              event.target.value = "";
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => inputsRef.current[HERO_SLOT.kind]?.click()}
+        disabled={remainingSlots <= 0}
+        className="w-full rounded-2xl border border-ink bg-card p-4 text-left transition active:scale-[0.99] disabled:opacity-40"
+      >
+        <span className="inline-block rounded-full bg-ink px-2.5 py-1 font-mono text-micro uppercase text-white">
+          最关键
+        </span>
+        <span className="mt-2.5 block text-section text-ink">
+          + {HERO_SLOT.label}
+        </span>
+        <span className="mt-1.5 block text-label leading-relaxed text-muted">
+          这一份最关键：它能推翻大多数扣款。入住时就记在上面的污渍和划痕，
+          现在算不到你头上。
+        </span>
+        <span className="mt-2 block text-caption text-muted">{HERO_SLOT.hint}</span>
+      </button>
+
       <div className="grid grid-cols-2 gap-2">
         {UPLOAD_SLOTS.map((slot) => (
-          <div key={slot.kind}>
-            <input
-              ref={(node) => {
-                inputsRef.current[slot.kind] = node;
-              }}
-              type="file"
-              accept={slot.accept}
-              multiple
-              className="sr-only"
-              onChange={(event) => {
-                void handleFiles(event.target.files, slot.kind);
-                event.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => inputsRef.current[slot.kind]?.click()}
-              disabled={remainingSlots <= 0}
-              className="h-full w-full rounded-xl border border-dashed border-line bg-card px-3 py-3.5 text-left transition active:scale-[0.99] disabled:opacity-40"
-            >
-              <span className="block text-sm font-medium text-ink">
-                + {slot.label}
-              </span>
-              <span className="mt-0.5 block text-xs leading-snug text-muted">
-                {slot.hint}
-              </span>
-            </button>
-          </div>
+          <button
+            key={slot.kind}
+            type="button"
+            onClick={() => inputsRef.current[slot.kind]?.click()}
+            disabled={remainingSlots <= 0}
+            className="h-full w-full rounded-xl border border-dashed border-line bg-card px-3 py-3.5 text-left transition active:scale-[0.99] disabled:opacity-40"
+          >
+            <span className="block text-label font-medium text-ink">
+              + {slot.label}
+            </span>
+            <span className="mt-0.5 block text-caption leading-snug text-muted">
+              {slot.hint}
+            </span>
+          </button>
         ))}
       </div>
 
@@ -261,10 +302,10 @@ export function EvidenceUploader({
       {evidence.length > 0 ? (
         <div>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-ink">
+            <p className="text-label font-medium text-ink">
               已上传 {evidence.length} / {MAX_EVIDENCE_IMAGES}
             </p>
-            <p className="font-mono text-[11px] text-muted">
+            <p className="font-mono text-micro text-muted">
               {(totalBytes / 1024 / 1024).toFixed(1)} MB · 仅存在这次会话里
             </p>
           </div>
@@ -282,7 +323,7 @@ export function EvidenceUploader({
                   className="h-24 w-full object-cover"
                 />
                 <div className="px-2 py-1.5">
-                  <p className="truncate text-[11px] text-muted">
+                  <p className="truncate text-micro text-muted">
                     {KIND_LABEL[item.kind]}
                     {item.sourcePage ? ` · 第 ${item.sourcePage} 页` : ""}
                   </p>
@@ -291,7 +332,7 @@ export function EvidenceUploader({
                   type="button"
                   onClick={() => removeEvidence(item.id)}
                   aria-label={`删除 ${item.fileName}`}
-                  className="absolute right-1 top-1 rounded-full bg-ink/75 px-2 py-0.5 text-[11px] text-white"
+                  className="absolute right-1 top-1 rounded-full bg-ink/75 px-2 py-0.5 text-micro text-white"
                 >
                   删除
                 </button>
@@ -313,7 +354,7 @@ function StatusLine({ status }: { status: Status }) {
         ? "正在读图上的金额和日期…"
         : status.note;
     return (
-      <p className="flex items-center gap-2 text-sm text-muted">
+      <p className="flex items-center gap-2 text-label text-muted">
         <span className="size-2 animate-pulse rounded-full bg-gold-bright" />
         {note}
       </p>
@@ -321,26 +362,26 @@ function StatusLine({ status }: { status: Status }) {
   }
 
   if (status.phase === "quiet") {
-    return <p className="text-sm leading-relaxed text-muted">{status.note}</p>;
+    return <p className="text-label leading-relaxed text-muted">{status.note}</p>;
   }
 
   return (
     <div className="prefilled rounded-xl border border-gold-bright/50 px-3.5 py-3">
-      <p className="text-sm font-medium text-ink">
+      <p className="text-label font-medium text-ink">
         已根据你的证据自动填好 {status.fields.length} 项
       </p>
       <ul className="mt-1.5 flex flex-wrap gap-1.5">
         {status.fields.map((field) => (
           <li
             key={field}
-            className="rounded-full bg-gold-wash px-2.5 py-1 font-mono text-[11px] text-gold"
+            className="rounded-full bg-verdict-doubtful-wash px-2.5 py-1 font-mono text-micro text-verdict-doubtful"
           >
             {PREFILL_FIELD_LABELS[field]}
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs leading-relaxed text-muted">
-        回上一步核对一下，数字不对随时改——改过的字段不会再被覆盖。
+      <p className="mt-2 text-caption leading-relaxed text-muted">
+        下一步核对一下，数字不对随时改——改过的字段不会再被覆盖。
       </p>
     </div>
   );

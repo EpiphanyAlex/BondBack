@@ -45,14 +45,14 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
         {draft.deductions.map((item, index) => (
           <li key={item.id} className="rounded-xl border border-line bg-card p-3">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[11px] tracking-wide text-muted">
+              <span className="font-mono text-micro text-muted">
                 {String(index + 1).padStart(2, "0")}
               </span>
               {draft.deductions.length > 1 ? (
                 <button
                   type="button"
                   onClick={() => removeRow(item.id)}
-                  className="rounded-lg px-2 py-1 text-xs text-muted"
+                  className="rounded-lg px-2 py-1 text-caption text-muted"
                 >
                   删除
                 </button>
@@ -80,12 +80,12 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
         <button
           type="button"
           onClick={addRow}
-          className="rounded-xl border border-line bg-card px-3.5 py-2 text-sm font-medium text-ink active:scale-[0.98]"
+          className="rounded-xl border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
         >
           + 再加一项
         </button>
         {total !== undefined ? (
-          <p className="tnum font-mono text-sm text-muted">
+          <p className="tnum font-mono text-label text-muted">
             合计 ${total.toLocaleString("en-AU")}
           </p>
         ) : null}

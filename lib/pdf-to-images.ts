@@ -68,7 +68,7 @@ export async function pdfToImages(
       const canvas = createCanvas(viewport.width, viewport.height);
       const context = canvas.getContext("2d");
       if (context) {
-        context.fillStyle = "#ffffff";
+        context.fillStyle = "#ffffff"; // token-ok: canvas 底色，非 UI 配色
         context.fillRect(0, 0, canvas.width, canvas.height);
       }
 

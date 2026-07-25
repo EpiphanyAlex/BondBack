@@ -10,9 +10,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { StepAmounts } from "@/components/wizard/step-amounts";
 import { StepBasics } from "@/components/wizard/step-basics";
 import { StepEvidence } from "@/components/wizard/step-evidence";
+import { StepReview } from "@/components/wizard/step-review";
 import { LedgerBar } from "@/components/wizard/ledger-bar";
 import {
   StepHeading,
@@ -22,24 +22,31 @@ import {
 import { deductionTotal, parseAmount, type PrefillableField } from "@/lib/case-draft";
 import { useCaseSession } from "@/lib/case-session";
 
+/**
+ * 上传优先（v1.1）：先传证据、再核对已填好的表。
+ * 反过来的话，用户认真填完金额后预填将无事可填，魔法时刻会被流程顺序自己抵消。
+ */
 const STEPS: WizardStepMeta[] = [
   {
     id: "basics",
     title: "第一步 · 基本情况",
     question: "先说清楚：在哪个州，为什么被扣？",
-    hint: "州决定了适用哪部法、找哪个机构、有多长时限。",
-  },
-  {
-    id: "amounts",
-    title: "第二步 · 金额与扣款",
-    question: "他们扣了多少，凭什么扣？",
-    hint: "逐项写清楚，后面才能一项一项判。",
+    hint: "州决定了适用哪部法、找哪个机构、有多长时限。十几秒就能过。",
+    cta: "下一步",
   },
   {
     id: "evidence",
-    title: "第三步 · 证据与确认",
-    question: "有截图或租约吗？没有也能继续。",
-    hint: "传上来的话，金额和日期这些字段会自动填好。",
+    title: "第二步 · 上传证据",
+    question: "手里有什么材料，先传上来",
+    hint: "AI 现在就把金额、日期、扣款明细读出来，下一步的表你只用核对。没有也能跳过。",
+    cta: "传好了，去核对",
+  },
+  {
+    id: "review",
+    title: "第三步 · 核对与补全",
+    question: "核对一下，空的补上",
+    hint: "读出来的字段已经填好了；你改过的，之后不会再被覆盖。",
+    cta: "看看我的胜算",
   },
 ];
 
@@ -71,7 +78,8 @@ export default function WizardPage() {
     if (stepIndex === 0 && draft.disputeTypes.length === 0) {
       return "先选一个纠纷类型，哪怕是「其他」。";
     }
-    if (stepIndex === 1) {
+    // 金额校验只在最后一步拦人：第 2 步允许两手空空地跳过上传
+    if (stepIndex === 2) {
       if (bond === undefined || bond <= 0) return "填一下押金总额，这是算账的基准。";
       if (claimed === undefined || claimed <= 0) {
         return "填被扣总额，或者在明细里写上至少一笔金额。";
@@ -103,18 +111,17 @@ export default function WizardPage() {
       />
 
       <div ref={topRef} className="flex-1">
-        <div key={step.id} className="step-enter mx-auto max-w-md px-4 pb-8 pt-6">
+        {/* ≥lg 加宽到 720px、不分栏（design-tokens §4.3）—— 多栏表单是公认反模式 */}
+        <div
+          key={step.id}
+          className="step-enter mx-auto max-w-md px-4 pb-8 pt-6 lg:max-w-[720px]"
+        >
           <StepHeading step={step} />
 
           <div className="mt-6">
             {stepIndex === 0 ? <StepBasics /> : null}
-            {stepIndex === 1 ? <StepAmounts justPrefilled={justPrefilled} /> : null}
-            {stepIndex === 2 ? (
-              <StepEvidence
-                onPrefilled={setJustPrefilled}
-                onEdit={() => goToStep(1)}
-              />
-            ) : null}
+            {stepIndex === 1 ? <StepEvidence onPrefilled={setJustPrefilled} /> : null}
+            {stepIndex === 2 ? <StepReview justPrefilled={justPrefilled} /> : null}
           </div>
         </div>
       </div>
@@ -122,11 +129,11 @@ export default function WizardPage() {
       <LedgerBar
         bondAmount={bond}
         claimedAmount={claimed}
-        primaryLabel={stepIndex === STEPS.length - 1 ? "看看我的胜算" : "下一步"}
+        primaryLabel={step.cta ?? "下一步"}
         onPrimary={handlePrimary}
         secondary={
           showBlocker && blocker ? (
-            <p className="text-[13px] text-gold-bright">{blocker}</p>
+            <p className="text-caption text-gold-bright">{blocker}</p>
           ) : null
         }
       />

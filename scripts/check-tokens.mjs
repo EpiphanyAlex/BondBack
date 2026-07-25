@@ -55,7 +55,9 @@ const RULES = [
     id: "inline-duration",
     label: "行内时长",
     hint: "时长走 var(--duration-quick|settle|sweep|beat)；Tailwind 侧只许 duration-150 / duration-300",
-    pattern: /(?<![\w-])\d+ms\b|\bduration-(?!150\b|300\b)[\w[]+/g,
+    // `(?<![\w-])` 让 `--duration-sweep` / `var(--duration-settle)` 不被误判 ——
+    // 引用 token 正是本规则想要的写法，只有 Tailwind 侧的 duration-500 才算违规
+    pattern: /(?<![\w-])\d+ms\b|(?<![\w-])duration-(?!150\b|300\b)[\w[]+/g,
   },
 ];
 

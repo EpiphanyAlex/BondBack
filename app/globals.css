@@ -1,25 +1,138 @@
 @import "tailwindcss";
 
-/* 占位主题 token —— 真实视觉方向在写 UI 前由 frontend-design 定（见 docs/plan.md），
-   届时只改这里的变量值，不动结构。 */
+/* ── 视觉方向：「公文与账本」────────────────────────────────────────────
+   产品要同时说服两种情绪：被扣钱的委屈，和「我这边有法条撑腰」的底气。
+   取澳洲租赁 itemised deduction statement 与中文公文用印的意象：
+   墨蓝作权威底色、金色只给钱数、印章红只给「不合法 / 高风险」。
+   全站唯一的深色面是底部账本条 —— 它是记忆点，其余一律安静。
+   ──────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --muted: #78716c;
-  --brand: #0d9488;
+  --ink: #12212f; /* 墨蓝：标题、账本条 */
+  --ink-soft: #24384b; /* 墨蓝浅一档：账本条内分隔 */
+  --paper: #f4f6f8; /* 冷调纸面 */
+  --card: #ffffff;
+  --line: #dfe4ea; /* 发丝分隔线 */
+  --muted: #5f6d7e; /* 次要文字 */
+  --gold: #9c650f; /* 金额（浅底文字，保证对比度） */
+  --gold-bright: #e8a33d; /* 深底上的金额、预填高亮 */
+  --gold-wash: #fdf3e0; /* 预填高亮底 */
+  --seal: #b93a27; /* 印章红：不合法、高风险 */
+  --jade: #1c6b5d; /* 合法、已确认 */
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --brand: var(--ink);
   --brand-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-line: var(--line);
   --color-muted: var(--muted);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-wash: var(--gold-wash);
+  --color-seal: var(--seal);
+  --color-jade: var(--jade);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system,
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  /* 展示体只用在大标题与钱数上，克制使用 */
+  --font-display: var(--font-bricolage), var(--font-geist-sans), system-ui,
+    "PingFang SC", sans-serif;
+  /* 等宽体留给「码」：法条编号、日期、金额 —— 它们是代号不是散文 */
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 金额一律等宽对齐，账本感的来源 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* 魔法时刻：识别成功后，被自动填好的字段扫过一道金色 */
+@keyframes prefill-sweep {
+  0%,
+  70% {
+    background-color: var(--gold-wash);
+    box-shadow: inset 0 0 0 1px var(--gold-bright);
+  }
+  100% {
+    background-color: var(--card);
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+
+.prefilled {
+  animation: prefill-sweep 1.6s ease-out both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.step-enter {
+  animation: rise-in 0.28s ease-out both;
+}
+
+/* 表单原子：统一发丝描边 + 聚焦墨蓝环，避免各处各写一套 */
+.field-input {
+  width: 100%;
+  border-radius: 0.625rem;
+  border: 1px solid var(--line);
+  background-color: var(--card);
+  padding: 0.75rem 0.875rem;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-input::placeholder {
+  color: #9aa6b4;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgb(18 33 47 / 0.12);
+}
+
+/* iOS 上 <16px 的输入框会触发自动放大，锁死字号 */
+input,
+select,
+textarea {
+  font-size: max(16px, 1rem);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

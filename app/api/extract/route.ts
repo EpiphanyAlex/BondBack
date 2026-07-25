@@ -53,6 +53,45 @@ const KIND_HINT_ZH: Record<string, string> = {
 
 const EMPTY: ExtractResult = { fields: {} };
 
+/**
+ * 诊断码。前端只读 `fields`，这个字段纯粹是为了让「静默失败」在部署环境里
+ * 还能查得出原因 —— 只暴露粗粒度枚举，不带任何密钥或用户内容。
+ */
+type Diagnostic =
+  | "ok"
+  | "ai-disabled"
+  | "rate-limited"
+  | "no-images"
+  | "payload-too-large"
+  | "model-error"
+  | "no-fields-found"
+  | "bad-request";
+
+/** `?diag=1` 时附带脱敏的错误摘要（错误类型 + HTTP status + 截断的报错文本）。 */
+function errorSummary(error: unknown): string {
+  if (error instanceof Error) {
+    const status = (error as { status?: number }).status;
+    const code = (error as { code?: string }).code;
+    return [
+      error.name,
+      status !== undefined ? `status=${status}` : null,
+      code ? `code=${code}` : null,
+      error.message.slice(0, 400),
+    ]
+      .filter(Boolean)
+      .join(" | ");
+  }
+  return String(error).slice(0, 200);
+}
+
+function respond(
+  fields: ExtractResult["fields"],
+  diagnostic: Diagnostic,
+  detail?: string,
+): Response {
+  return Response.json({ fields, diagnostic, ...(detail ? { detail } : {}) });
+}
+
 const SYSTEM_PROMPT = `You extract structured facts from Australian residential tenancy documents (NSW / VIC) so a form can be pre-filled.
 
 Rules:
@@ -156,21 +195,26 @@ async function callModel(
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const wantsDetail =
+    new URL(request.url).searchParams.get("diag") === "1";
+  const detailOf = (error: unknown) =>
+    wantsDetail ? errorSummary(error) : undefined;
+
   try {
-    if (!isAiEnabled()) return Response.json(EMPTY);
+    if (!isAiEnabled()) return respond({}, "ai-disabled");
 
     const limit = checkRateLimit(
       `extract:${clientKeyFromHeaders(request.headers)}`,
       RATE_LIMIT,
       RATE_WINDOW_MS,
     );
-    if (!limit.ok) return Response.json(EMPTY);
+    if (!limit.ok) return respond({}, "rate-limited");
 
     const body = (await request.json()) as { images?: unknown };
     const images = selectImages(body.images);
-    if (images.length === 0) return Response.json(EMPTY);
+    if (images.length === 0) return respond({}, "no-images");
     if (totalBytes(images) > EXTRACT_MAX_PAYLOAD_BYTES) {
-      return Response.json(EMPTY);
+      return respond({}, "payload-too-large");
     }
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -178,23 +222,31 @@ export async function POST(request: Request): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25_000);
 
+    const finish = (result: ExtractResult) =>
+      respond(
+        result.fields,
+        Object.keys(result.fields).length > 0 ? "ok" : "no-fields-found",
+      );
+
     try {
-      return Response.json(await callModel(client, images, controller.signal));
+      return finish(await callModel(client, images, controller.signal));
     } catch (error) {
-      console.error("[extract] first attempt failed", error);
-      if (controller.signal.aborted) return Response.json(EMPTY);
+      console.error("[extract] first attempt failed", errorSummary(error));
+      if (controller.signal.aborted) {
+        return respond({}, "model-error", detailOf(error));
+      }
       try {
         // structured output 偶发跑偏：重试一次就收手
-        return Response.json(await callModel(client, images, controller.signal));
+        return finish(await callModel(client, images, controller.signal));
       } catch (retryError) {
-        console.error("[extract] retry failed", retryError);
-        return Response.json(EMPTY);
+        console.error("[extract] retry failed", errorSummary(retryError));
+        return respond({}, "model-error", detailOf(retryError));
       }
     } finally {
       clearTimeout(timeout);
     }
   } catch (error) {
-    console.error("[extract] unexpected failure", error);
-    return Response.json(EMPTY);
+    console.error("[extract] unexpected failure", errorSummary(error));
+    return respond({}, "bad-request", detailOf(error));
   }
 }

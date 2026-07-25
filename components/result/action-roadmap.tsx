@@ -1,24 +1,28 @@
-"use client";
-
 /**
- * 行动路线图（03b §5）。
+ * 第四幕 · 行动路线（03b §5）。
  *
  * **费用与时限一律从 `data/legal/` 的 `stateProcesses` 确定性渲染，不经过 LLM。**
  * 机构名、电话、来源链接同理 —— 这一段的可信度全靠「每句话都指得出出处」。
  *
- * 存管卡是第 1 步：`verify-record` 出黄卡，`possible-non-lodgement` 及以上出红卡
- * 并**必须展示计算依据**（日期 + 适用期限 + 来源）。任何等级都不得把 penalty units
- * 写成租客自动获赔。
+ * 这一版的两处结构调整：
+ * - **押金存管从「第 1 步」升为全幅前置横幅**。它不是流程里的一站，而是先要
+ *   查清的事实；而且它是唯一高度可变的一块（红卡要展示计算依据），
+ *   塞进等宽步骤列里会把整排撑歪。`verify-record` 出黄，
+ *   `possible-non-lodgement` 及以上出红并**必须展示计算依据**。
+ * - **三个机构横排**。它们是真正的升级序列（押金机构 → 消费者事务 → 仲裁），
+ *   所以编号站得住脚；但原先三张卡竖着挤在 380px 右栏里，一张卡只有 310px 可用。
+ * - 本组件**不再自带外层卡片**：外层卡里套步骤卡、步骤卡里再套细节卡，
+ *   三层同构描边是密集感的主要来源。容器交给 `ResultView`。
+ *
+ * 任何等级都不得把 penalty units 写成租客自动获赔。
  */
-
-import { useEffect, useRef, useState } from "react";
 
 import { getConfirmedStateProcesses } from "@/data/legal";
 import type { ProcessStage, StateProcess } from "@/data/legal/types";
 import { formatIsoDateZh } from "@/lib/dates";
 import type { AUState, BondLodgementAlert, BondLodgementAlertLevel } from "@/lib/types";
 
-import { copyToClipboard, cx } from "./utils";
+import { cx } from "./utils";
 
 const STAGE_ORDER: ProcessStage[] = [
   "bond-authority",
@@ -46,7 +50,7 @@ const ALERT_META: Record<
 };
 
 const TONE_CLASS = {
-  info: "border-line bg-paper",
+  info: "border-line bg-card",
   verify: "border-alert-verify/40 bg-verdict-doubtful-wash",
   risk: "border-alert-risk/35 bg-alert-risk/10",
 } as const;
@@ -58,7 +62,6 @@ export interface ActionRoadmapProps {
   processes?: StateProcess[];
   /** 押金 claim 通知的截止日（YYYY-MM-DD） */
   claimDueAt?: string;
-  propertyAddress?: string;
   className?: string;
   id?: string;
 }
@@ -68,7 +71,6 @@ export function ActionRoadmap({
   bondAlert,
   processes,
   claimDueAt,
-  propertyAddress,
   className,
   id,
 }: ActionRoadmapProps) {
@@ -80,11 +82,12 @@ export function ActionRoadmap({
   const bondAuthority =
     ordered.find((item) => item.stage === "bond-authority")?.agency ??
     "押金存管机构";
-  const tribunal =
-    ordered.find((item) => item.stage === "tribunal")?.agency ?? "仲裁机构";
-  const consumerAgency =
-    ordered.find((item) => item.stage === "consumer-agency")?.agency ??
-    "消费者事务机构";
+
+  /** 按阶段分组，空组不占位 —— 换州时条目数会变，阶段数不变。 */
+  const groups = STAGE_ORDER.map((stage) => ({
+    stage,
+    items: ordered.filter((item) => item.stage === stage),
+  })).filter((group) => group.items.length > 0);
 
   const alertMeta = ALERT_META[bondAlert.level];
   const needsBasis =
@@ -92,120 +95,103 @@ export function ActionRoadmap({
     bondAlert.level === "authority-confirmed-missing";
 
   return (
-    <section
-      id={id}
-      className={cx("rounded-2xl border border-line bg-card p-4 md:p-5", className)}
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 className="text-section text-ink">行动路线（{state}）</h2>
+    <section id={id} className={cx("flex flex-col gap-5", className)}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 className="text-title text-ink">行动路线 · {state}</h2>
         <span className="font-mono text-micro uppercase text-muted">
           费用与时限来自官方指引
         </span>
       </div>
-      <p className="mt-1 text-caption leading-relaxed text-muted">
-        下面每一步的机构、费用、时限与链接都来自结构化的官方资料，不是 AI
-        写出来的。费用会调整，提交前按链接复核一次。
-      </p>
 
       {claimDueAt ? (
-        <p className="mt-3 rounded-xl border border-alert-risk/35 bg-alert-risk/10 px-3.5 py-2.5 text-label leading-relaxed text-ink">
+        <p className="border-l-2 border-alert-risk bg-alert-risk/10 px-4 py-3 text-body leading-relaxed text-ink">
           <span className="font-semibold">先看期限：</span>
           你收到的押金 claim 通知截止 {formatIsoDateZh(claimDueAt)}
           。过了这个日期，押金可能按对方的 claim 直接支付。
         </p>
       ) : null}
 
-      <ol className="mt-3 flex flex-col gap-3">
-        {/* 第 1 步永远是存管 */}
-        <Step index={1} stageLabel="押金存管">
-          <div className={cx("rounded-xl border px-3.5 py-3", TONE_CLASS[alertMeta.tone])}>
-            <p className="text-label font-semibold text-ink">
-              {alertMeta.titleZh}
-            </p>
-            <p className="mt-1 text-caption leading-relaxed text-muted">
-              {bondAlert.reasoningZh}
-            </p>
+      {/* 前置检查：先查存管，再谈流程 */}
+      <div className={cx("rounded-2xl border p-4 md:p-5", TONE_CLASS[alertMeta.tone])}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h3 className="text-section text-ink">{alertMeta.titleZh}</h3>
+          <span className="font-mono text-micro uppercase text-muted">
+            开工前先查这个
+          </span>
+        </div>
 
-            {bondAlert.deadlineBasis || bondAlert.calculatedDeadline ? (
-              <div className="mt-2 rounded-lg border border-line bg-card px-3 py-2">
-                <p className="font-mono text-micro uppercase text-muted">
-                  计算依据
+        <p className="mt-2 text-body leading-relaxed text-ink">
+          {bondAlert.reasoningZh}
+        </p>
+
+        <div className="mt-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5">
+          {bondAlert.deadlineBasis || bondAlert.calculatedDeadline ? (
+            <div className="rounded-xl bg-card px-4 py-3">
+              <p className="font-mono text-micro uppercase text-muted">
+                计算依据
+              </p>
+              {bondAlert.calculatedDeadline ? (
+                <p className="tnum mt-1.5 font-mono text-label text-ink">
+                  估算存管期限 {formatIsoDateZh(bondAlert.calculatedDeadline)}
                 </p>
-                {bondAlert.calculatedDeadline ? (
-                  <p className="tnum mt-1 font-mono text-caption text-ink">
-                    估算存管期限 {formatIsoDateZh(bondAlert.calculatedDeadline)}
-                  </p>
-                ) : null}
-                {bondAlert.deadlineBasis ? (
-                  <p className="mt-1 text-caption leading-relaxed text-muted">
-                    {bondAlert.deadlineBasis}
-                  </p>
-                ) : null}
-              </div>
-            ) : needsBasis ? (
-              <p className="mt-2 text-caption leading-relaxed text-muted">
-                这一级本应给出计算依据，但本次缺少可靠的付款日期。先去{bondAuthority}
-                核对官方记录，再下判断。
-              </p>
-            ) : null}
+              ) : null}
+              {bondAlert.deadlineBasis ? (
+                <p className="mt-1.5 text-label leading-relaxed text-muted">
+                  {bondAlert.deadlineBasis}
+                </p>
+              ) : null}
+            </div>
+          ) : needsBasis ? (
+            <p className="text-label leading-relaxed text-muted">
+              这一级本应给出计算依据，但本次缺少可靠的付款日期。先去{bondAuthority}
+              核对官方记录，再下判断。
+            </p>
+          ) : null}
 
+          <div className="mt-3 flex flex-col gap-2 lg:mt-0">
+            {/* 这一条是军规：penalty units 绝不可写成租客自动获赔，删不得，只压长度 */}
             {bondAlert.level !== "none" ? (
-              <p className="mt-2 text-caption leading-relaxed text-muted">
-                注意：存管违规是机构对房东的处罚事由，
+              <p className="text-label leading-relaxed text-muted">
+                存管违规是机构对房东的处罚事由，
                 <span className="font-semibold text-ink">不等于</span>
-                你自动获得赔偿。它的作用是给你在协商和裁决里的筹码。
+                你自动获赔；它的作用是谈判筹码。
               </p>
             ) : null}
+            <p className="text-label leading-relaxed text-muted">
+              抢先手：趁对方的单方 claim 还没变成默认结果，先去{bondAuthority}
+              标记争议。
+            </p>
           </div>
-
-          <p className="mt-2 text-caption leading-relaxed text-muted">
-            先手很重要：在对方的单方 claim 变成默认结果之前，先到{bondAuthority}
-            发起退款申请或把争议标记上。
-          </p>
-        </Step>
-
-        {ordered.map((process, index) => (
-          <Step
-            key={process.id}
-            index={index + 2}
-            stageLabel={STAGE_LABEL[process.stage]}
-          >
-            <ProcessCard process={process} />
-          </Step>
-        ))}
-      </ol>
-
-      <EmailTemplate
-        state={state}
-        tribunal={tribunal}
-        consumerAgency={consumerAgency}
-        propertyAddress={propertyAddress}
-      />
-    </section>
-  );
-}
-
-/* ── 步骤外壳 ─────────────────────────────────────────────────────────── */
-
-function Step({
-  index,
-  stageLabel,
-  children,
-}: {
-  index: number;
-  stageLabel: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <li className="grid grid-cols-[1.75rem_1fr] gap-x-3">
-      <span className="tnum mt-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-paper font-mono text-caption font-semibold text-ink">
-        {index}
-      </span>
-      <div className="min-w-0">
-        <p className="font-mono text-micro uppercase text-muted">{stageLabel}</p>
-        <div className="mt-1.5">{children}</div>
+        </div>
       </div>
-    </li>
+
+      {/*
+        编号给的是**阶段**，不是条目：升级发生在阶段之间（押金机构 → 消费者事务 →
+        仲裁），而一个阶段里可能有好几个入口（NSW 有 4 条、VIC 有 6 条）。
+        按条目编号会让人以为要逐条走一遍，也会让「三栏」在换州后错位。
+        所以这里固定按 STAGE_ORDER 分三组，空组跳过 —— 编号因此始终承载信息。
+      */}
+      <div>
+        {/* 「谈不成才往下一级」这件事，编号 1→2→3 加上阶段名已经说清了，不必再写一句 */}
+        <ol className="grid gap-4 lg:grid-cols-3">
+          {groups.map((group, index) => (
+            <li key={group.stage} className="flex flex-col gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="tnum flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-mono text-caption font-semibold text-white">
+                  {index + 1}
+                </span>
+                <span className="font-mono text-micro uppercase text-muted">
+                  {STAGE_LABEL[group.stage]}
+                </span>
+              </div>
+              {group.items.map((process) => (
+                <ProcessCard key={process.id} process={process} />
+              ))}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
   );
 }
 
@@ -217,18 +203,18 @@ function ProcessCard({ process }: { process: StateProcess }) {
   ].filter((item): item is { label: string; value: string } => Boolean(item));
 
   return (
-    <div className="rounded-xl border border-line px-3.5 py-3">
-      <p className="text-label font-semibold text-ink">{process.agency}</p>
-      <p className="mt-1 text-caption leading-relaxed text-muted">
+    <div className="flex h-full w-full flex-col rounded-2xl border border-line bg-card p-4 md:p-5">
+      <h3 className="text-section text-ink">{process.agency}</h3>
+      <p className="mt-1.5 text-label leading-relaxed text-muted">
         {process.summaryZh}
       </p>
 
       {process.stepsZh.length > 0 ? (
-        <ul className="mt-2 flex flex-col gap-1">
+        <ul className="mt-3 flex flex-col gap-1.5">
           {process.stepsZh.map((step) => (
             <li
               key={step}
-              className="grid grid-cols-[0.75rem_1fr] gap-x-1.5 text-caption leading-relaxed text-ink"
+              className="grid grid-cols-[0.75rem_1fr] gap-x-2 text-label leading-relaxed text-ink"
             >
               <span aria-hidden="true" className="text-muted">
                 ·
@@ -240,13 +226,13 @@ function ProcessCard({ process }: { process: StateProcess }) {
       ) : null}
 
       {meta.length > 0 ? (
-        <dl className="mt-2 grid grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 border-t border-line pt-2">
+        <dl className="mt-3 grid grid-cols-[2.5rem_1fr] gap-x-3 gap-y-1.5 border-t border-line pt-3">
           {meta.map((item) => (
             <div key={item.label} className="contents">
-              <dt className="font-mono text-micro uppercase text-muted">
+              <dt className="pt-0.5 font-mono text-micro uppercase text-muted">
                 {item.label}
               </dt>
-              <dd className="text-caption leading-relaxed text-ink">
+              <dd className="text-label leading-relaxed text-ink">
                 {item.value}
               </dd>
             </div>
@@ -255,114 +241,25 @@ function ProcessCard({ process }: { process: StateProcess }) {
       ) : null}
 
       {process.notes ? (
-        <p className="mt-2 text-caption leading-relaxed text-muted">
+        <p className="mt-2.5 text-caption leading-relaxed text-muted">
           {process.notes}
         </p>
       ) : null}
 
-      <a
-        href={process.sourceUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-2 inline-block text-caption font-medium text-ink underline underline-offset-2"
-      >
-        官方页面 ↗
-      </a>
-      <span className="tnum ml-2 font-mono text-micro uppercase text-muted">
-        核对于 {process.checkedAt}
-      </span>
-    </div>
-  );
-}
-
-/* ── 邮件留证话术模板 ─────────────────────────────────────────────────── */
-
-function buildEmailTemplate({
-  tribunal,
-  consumerAgency,
-  propertyAddress,
-}: {
-  tribunal: string;
-  consumerAgency: string;
-  propertyAddress?: string;
-}): string {
-  const address = propertyAddress ?? "[property address]";
-  return [
-    `Subject: Rental bond - disputed claim - ${address}`,
-    "",
-    "Dear [agent / landlord],",
-    "",
-    "I refer to my letter of [date] regarding your claim against my rental bond. I attach it again below for your records.",
-    "",
-    "Please confirm receipt of this email in writing.",
-    "",
-    "Please also provide, for each amount claimed, a copy of the final condition report and the estimates, quotations, invoices or receipts you rely on.",
-    "",
-    `If I do not receive a written reply within 14 days, I will apply to ${tribunal} and advise ${consumerAgency} that the claim is disputed.`,
-    "",
-    "Kind regards,",
-    "[your name] / [phone]",
-  ].join("\n");
-}
-
-function EmailTemplate({
-  state,
-  tribunal,
-  consumerAgency,
-  propertyAddress,
-}: {
-  state: AUState;
-  tribunal: string;
-  consumerAgency: string;
-  propertyAddress?: string;
-}) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const template = buildEmailTemplate({
-    tribunal,
-    consumerAgency,
-    propertyAddress,
-  });
-
-  useEffect(
-    () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    },
-    [],
-  );
-
-  const handleCopy = async () => {
-    const ok = await copyToClipboard(template);
-    setCopied(ok);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setCopied(false), 3000);
-  };
-
-  return (
-    <div className="mt-4 rounded-xl border border-line bg-paper px-3.5 py-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3 className="text-label font-semibold text-ink">邮件留证话术</h3>
-        <span className="font-mono text-micro uppercase text-muted">
-          {state} 通用
+      {/* 来源永远贴在卡底：这一段的可信度全靠指得出出处 */}
+      <div className="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1 pt-3">
+        <a
+          href={process.sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-label font-semibold text-ink underline underline-offset-2"
+        >
+          官方页面 ↗
+        </a>
+        <span className="tnum font-mono text-micro uppercase text-muted">
+          核对于 {process.checkedAt}
         </span>
       </div>
-      <ul className="mt-2 flex flex-col gap-1 text-caption leading-relaxed text-muted">
-        <li>· 用邮件发，正文直接粘贴申诉信全文，不要只发附件。</li>
-        <li>· 抄送一份给自己，保留发送时间与对方回复。</li>
-        <li>· 电话沟通后补一封邮件复述要点，口头承诺才留得下痕迹。</li>
-      </ul>
-
-      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-line bg-card px-3 py-2 font-mono text-caption leading-relaxed text-ink">
-        {template}
-      </pre>
-
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="mt-2 rounded-lg border border-line bg-card px-3 py-2 text-caption font-medium text-ink transition-colors duration-150 hover:bg-paper"
-      >
-        {copied ? "已复制" : "复制邮件模板"}
-      </button>
     </div>
   );
 }

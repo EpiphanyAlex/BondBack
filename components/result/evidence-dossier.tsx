@@ -96,7 +96,7 @@ export function EvidenceDossier({
       >
         <span className="min-w-0 flex-1">
           <span className="block text-section text-ink">证据档</span>
-          <span className="tnum mt-0.5 block text-caption text-muted">
+          <span className="tnum mt-0.5 block text-label text-muted">
             {fileCount === 0
               ? "这次没有上传任何证据"
               : `AI 从 ${fileCount} 份证据读到 ${facts.length} 条事实 · 对照卡采用 ${usedCount} 条`}
@@ -110,11 +110,7 @@ export function EvidenceDossier({
           id={panelId}
           className="flex flex-col gap-3 border-t border-line px-4 py-4 md:px-5"
         >
-          <p className="text-caption leading-relaxed text-muted">
-            没被采用的事实也留在这里 —— 它们证明这次是把全部材料通读了一遍，
-            而不是只挑了用得上的那几条。
-          </p>
-
+          {/* 「未采用的也列出来」这件事，摘要行的「读到 M 条 · 采用 N 条」已经说明了 */}
           {evidence.map((file) => {
             const own = facts.filter((fact) => fact.evidenceId === file.id);
             return (

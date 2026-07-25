@@ -7,7 +7,7 @@
  * 主行动固定在底部账本条里，单手就能走完。
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { StepBasics } from "@/components/wizard/step-basics";
@@ -31,21 +31,21 @@ const STEPS: WizardStepMeta[] = [
     id: "basics",
     title: "第一步 · 基本情况",
     question: "先说清楚：在哪个州，为什么被扣？",
-    hint: "州决定了适用哪部法、找哪个机构、有多长时限。十几秒就能过。",
+    hint: "州决定了适用哪部法、多长时限。十几秒。",
     cta: "下一步",
   },
   {
     id: "evidence",
     title: "第二步 · 上传证据",
     question: "手里有什么材料，先传上来",
-    hint: "AI 现在就把金额、日期、扣款明细读出来，下一步的表你只用核对。没有也能跳过。",
+    hint: "现在就把金额和扣款明细读出来，下一步只用核对。没有也能跳过。",
     cta: "传好了，去核对",
   },
   {
     id: "review",
     title: "第三步 · 核对与补全",
     question: "核对一下，空的补上",
-    hint: "读出来的字段已经填好了；你改过的，之后不会再被覆盖。",
+    hint: "读出来的已经填好；你改过的不会被覆盖。",
     cta: "看看我的胜算",
   },
 ];
@@ -56,12 +56,16 @@ export default function WizardPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [showBlocker, setShowBlocker] = useState(false);
   const [justPrefilled, setJustPrefilled] = useState<PrefillableField[]>([]);
-  const topRef = useRef<HTMLDivElement>(null);
 
   const step = STEPS[stepIndex]!;
 
+  /*
+   * 换步骤回到顶部。**不能用 `scrollIntoView`**：`topRef` 紧贴在 `sticky top-0`
+   * 的顶栏下面，把它的顶边对到视口顶边，标题就正好被顶栏盖住半行。
+   * 向导本身就是整页，直接回文档原点最简单也最准。
+   */
   useEffect(() => {
-    topRef.current?.scrollIntoView({ block: "start" });
+    window.scrollTo({ top: 0 });
   }, [stepIndex]);
 
   // 换步骤时把「还差什么」的提示收起来，别把上一屏的话留到下一屏
@@ -110,7 +114,7 @@ export default function WizardPage() {
         onBack={() => goToStep(stepIndex - 1)}
       />
 
-      <div ref={topRef} className="flex-1">
+      <div className="flex-1">
         {/* ≥lg 加宽到 720px、不分栏（design-tokens §4.3）—— 多栏表单是公认反模式 */}
         <div
           key={step.id}

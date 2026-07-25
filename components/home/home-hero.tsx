@@ -29,9 +29,14 @@ const OUTPUT_LABEL = "以下是它的实际输出";
 export function HomeHero() {
   return (
     <section className="mx-auto w-full max-w-[1152px] px-4 pt-4 md:px-6 md:pt-6">
-      <div className="lg:grid lg:grid-cols-[1fr_440px] lg:items-start lg:gap-10">
-        {/* 左栏（手机上就是首屏的前半段） */}
-        <div className="lg:pt-8">
+      {/*
+        对照卡从 440px 加宽到 620px。它是首屏的论点，窄栏会把它拉成一根近千像素的
+        长条 —— 左栏讲完话就见底，右边还在往下流，桌面上左侧空一大片。
+        加宽后卡变矮、法条牌不再折行，两栏高度也就接近了。
+      */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,620px)] lg:items-center lg:gap-10">
+        {/* 左栏（手机上就是首屏的前半段）*/}
+        <div>
           <p className="font-mono text-micro uppercase text-muted">
             押金侠 BondBack · 目前支持 NSW / VIC
           </p>
@@ -43,8 +48,8 @@ export function HomeHero() {
           </h1>
 
           <p className="mt-3 text-body leading-relaxed text-muted">
-            上传扣款清单和入住报告，AI 按 NSW/VIC 租赁法规逐项比对证据，
-            告诉你哪几笔不应扣、凭哪条法规，并生成一封可直接发送的英文申诉信。
+            传扣款清单和入住报告，按 NSW / VIC 租赁法逐笔比对，
+            告诉你哪几笔不该扣、凭哪条法规，并写好英文申诉信。
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-2 md:gap-3">
@@ -116,8 +121,9 @@ export function HomeHero() {
           </p>
           {/* 与结果页同一个组件、同一份数据，不做任何简化版 */}
           <ComparisonCard item={HERO_ITEM} facts={SAMPLE_ANALYSIS.facts} />
+          {/* 军规要求示例必须标虚构；「与结果页是同一个组件」是实现细节，读者不关心 */}
           <p className="mt-2 text-caption leading-relaxed text-muted">
-            上面这张卡来自一个虚构的示例案例，与结果页里的卡是同一个组件。
+            示例案例，文件与当事人均为虚构。
           </p>
         </div>
       </div>

@@ -178,8 +178,8 @@ export function BondLodgementFields() {
 
         {payment.paidByInstalments === "yes" ? (
           <div className="rounded-xl border border-line bg-paper p-3">
-            <p className="text-sm font-medium text-ink">后面几期分别是哪天付的？</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted">
+            <p className="text-label font-medium text-ink">后面几期分别是哪天付的？</p>
+            <p className="mt-1 text-caption leading-relaxed text-muted">
               上面填的是首期日期。把能想起来的分期日期都加上，最后一项就是付清日；
               少了这些日期就算不出期限，只能给核实提示。
             </p>
@@ -193,7 +193,7 @@ export function BondLodgementFields() {
                   <button
                     type="button"
                     onClick={() => removeInstalmentDate(index)}
-                    className="shrink-0 rounded-lg px-2 py-1 text-xs text-muted"
+                    className="shrink-0 rounded-lg px-2 py-1 text-caption text-muted"
                   >
                     删除
                   </button>
@@ -202,7 +202,7 @@ export function BondLodgementFields() {
               <button
                 type="button"
                 onClick={addInstalmentDate}
-                className="rounded-xl border border-line bg-card px-3.5 py-2 text-sm font-medium text-ink active:scale-[0.98]"
+                className="rounded-xl border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
               >
                 + 加一期
               </button>
@@ -252,7 +252,7 @@ export function BondLodgementFields() {
         <Callout tone={ALERT_TONE[alert.level]} title={ALERT_TITLE[alert.level]}>
           <p>{alert.reasoningZh}</p>
           {alert.deadlineBasis ? (
-            <p className="mt-2 font-mono text-[12px] leading-relaxed">
+            <p className="mt-2 font-mono text-caption leading-relaxed">
               {alert.deadlineBasis}
             </p>
           ) : null}
@@ -284,10 +284,10 @@ function ClaimNoticeFields() {
           }
         />
         <span>
-          <span className="block text-sm font-medium text-ink">
+          <span className="block text-label font-medium text-ink">
             我收到了押金 claim 通知
           </span>
-          <span className="mt-0.5 block text-xs leading-relaxed text-muted">
+          <span className="mt-0.5 block text-caption leading-relaxed text-muted">
             房东或中介单方申请扣押金时，机构会发通知给你。通知上的期限通常很短，
             错过就可能直接按对方的申请付款。
           </span>

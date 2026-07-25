@@ -23,9 +23,9 @@ export function SectionCard({
       }`}
     >
       {title ? (
-        <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
+        <h3 className="text-body font-semibold text-ink">{title}</h3>
       ) : null}
-      {hint ? <p className="mt-1 text-xs leading-relaxed text-muted">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-caption leading-relaxed text-muted">{hint}</p> : null}
       <div className={title || hint ? "mt-3" : ""}>{children}</div>
     </section>
   );
@@ -49,11 +49,11 @@ export function Field({
     <div className={highlight ? "prefilled rounded-xl" : ""}>
       <label
         htmlFor={htmlFor}
-        className="block text-sm font-medium text-ink"
+        className="block text-label font-medium text-ink"
       >
         {label}
       </label>
-      {hint ? <p className="mt-1 text-xs leading-relaxed text-muted">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-caption leading-relaxed text-muted">{hint}</p> : null}
       <div className="mt-2">{children}</div>
     </div>
   );
@@ -83,7 +83,7 @@ export function AmountInput({
 }) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-sm text-muted">
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-label text-muted">
         $
       </span>
       <input
@@ -157,7 +157,7 @@ export function ChoiceGroup<T extends string>({
             disabled={choice.disabled}
             onClick={() => onChange(choice.value)}
             className={[
-              "rounded-xl border px-3.5 py-3 text-left text-[15px] transition",
+              "rounded-xl border px-3.5 py-3 text-left text-body transition",
               selected
                 ? "border-ink bg-ink text-white"
                 : "border-line bg-card text-ink",
@@ -167,7 +167,7 @@ export function ChoiceGroup<T extends string>({
             <span className="font-medium">{choice.label}</span>
             {choice.hint ? (
               <span
-                className={`mt-0.5 block text-xs ${
+                className={`mt-0.5 block text-caption ${
                   selected ? "text-white/70" : "text-muted"
                 }`}
               >
@@ -175,7 +175,7 @@ export function ChoiceGroup<T extends string>({
               </span>
             ) : null}
             {choice.disabled && choice.disabledNote ? (
-              <span className="mt-0.5 block font-mono text-[11px] uppercase tracking-wide text-muted">
+              <span className="mt-0.5 block font-mono text-micro uppercase text-muted">
                 {choice.disabledNote}
               </span>
             ) : null}
@@ -209,7 +209,7 @@ export function ChipGroup<T extends string>({
             aria-pressed={selected}
             onClick={() => onToggle(choice.value)}
             className={[
-              "rounded-full border px-3.5 py-2 text-sm transition active:scale-[0.98]",
+              "rounded-full border px-3.5 py-2 text-label transition active:scale-[0.98]",
               selected
                 ? "border-ink bg-ink font-medium text-white"
                 : "border-line bg-card text-ink",
@@ -235,15 +235,15 @@ export function Callout({
 }) {
   const palette = {
     info: "border-line bg-paper text-ink",
-    warn: "border-gold-bright/50 bg-gold-wash text-ink",
-    risk: "border-seal/35 bg-seal/10 text-ink",
+    warn: "border-alert-verify/40 bg-verdict-doubtful-wash text-ink",
+    risk: "border-alert-risk/35 bg-alert-risk/10 text-ink",
   }[tone];
 
   return (
-    <div className={`rounded-xl border px-3.5 py-3 text-sm ${palette}`}>
+    <div className={`rounded-xl border px-3.5 py-3 text-label ${palette}`}>
       <p className="font-medium">{title}</p>
       {children ? (
-        <div className="mt-1 text-[13px] leading-relaxed text-muted">{children}</div>
+        <div className="mt-1 text-caption leading-relaxed text-muted">{children}</div>
       ) : null}
     </div>
   );

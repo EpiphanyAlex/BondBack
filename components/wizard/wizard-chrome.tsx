@@ -11,6 +11,8 @@ export interface WizardStepMeta {
   title: string;
   question: string;
   hint?: string;
+  /** 账本条上的主行动文案；每步说清楚「按下去会发生什么」 */
+  cta?: string;
 }
 
 export function WizardTopBar({
@@ -28,7 +30,7 @@ export function WizardTopBar({
         {stepIndex === 0 ? (
           <Link
             href="/"
-            className="-ml-1 rounded-lg px-2 py-1 text-sm text-muted"
+            className="-ml-1 rounded-lg px-2 py-1 text-label text-muted"
             aria-label="返回首页"
           >
             ←
@@ -37,7 +39,7 @@ export function WizardTopBar({
           <button
             type="button"
             onClick={onBack}
-            className="-ml-1 rounded-lg px-2 py-1 text-sm text-muted"
+            className="-ml-1 rounded-lg px-2 py-1 text-label text-muted"
             aria-label="返回上一步"
           >
             ←
@@ -55,7 +57,7 @@ export function WizardTopBar({
           ))}
         </div>
 
-        <span className="font-mono text-[11px] tracking-wide text-muted">
+        <span className="font-mono text-micro text-muted">
           {String(stepIndex + 1).padStart(2, "0")}/
           {String(steps.length).padStart(2, "0")}
         </span>
@@ -73,14 +75,14 @@ export function StepHeading({
 }) {
   return (
     <div>
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <p className="font-mono text-micro uppercase text-muted">
         {step.title}
       </p>
-      <h2 className="mt-1.5 font-display text-[26px] leading-tight font-extrabold text-ink">
+      <h2 className="mt-1.5 font-display text-title leading-tight font-extrabold text-ink">
         {step.question}
       </h2>
       {step.hint ? (
-        <p className="mt-2 text-sm leading-relaxed text-muted">{step.hint}</p>
+        <p className="mt-2 text-label leading-relaxed text-muted">{step.hint}</p>
       ) : null}
       {children}
     </div>

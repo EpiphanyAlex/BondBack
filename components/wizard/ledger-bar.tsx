@@ -39,20 +39,20 @@ export function LedgerBar({
           <div className="min-w-0">
             {hasNumbers ? (
               <>
-                <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/45">
+                <p className="font-mono text-micro uppercase text-white/45">
                   争取金额
                 </p>
-                <p className="tnum font-display text-[27px] leading-none font-extrabold text-gold-bright">
-                  <span className="text-[17px] font-semibold">$</span>
+                <p className="tnum font-display text-title leading-none font-extrabold text-amount-hero">
+                  <span className="text-section font-semibold">$</span>
                   {formatAud(claimedAmount)}
                 </p>
-                <p className="tnum mt-1 font-mono text-[11px] text-white/45">
+                <p className="tnum mt-1 font-mono text-micro text-white/45">
                   押金 ${formatAud(bondAmount)} · 被扣 ${formatAud(claimedAmount)}
                 </p>
               </>
             ) : (
-              <p className="text-[13px] leading-snug text-white/60">
-                填到金额那一步，这里会实时算出你在争的钱
+              <p className="text-caption leading-snug text-white/60">
+                传上证据或填完金额，这里会实时算出你在争的钱
               </p>
             )}
           </div>
@@ -61,7 +61,7 @@ export function LedgerBar({
             type="button"
             onClick={onPrimary}
             disabled={primaryDisabled}
-            className="shrink-0 rounded-xl bg-white px-5 py-3 text-[15px] font-semibold text-ink transition active:scale-[0.98] disabled:opacity-40"
+            className="shrink-0 rounded-xl bg-white px-5 py-3 text-body font-semibold text-ink transition active:scale-[0.98] disabled:opacity-40"
           >
             {primaryLabel}
           </button>

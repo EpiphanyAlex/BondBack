@@ -17,6 +17,7 @@
 
 import { useEffect, useState } from "react";
 
+import { CharacterSlot } from "@/components/character-slot";
 import type { EvidenceFact } from "@/lib/types";
 
 import type { AnalysisStageId, AnalysisStageState } from "./use-analysis";
@@ -132,7 +133,14 @@ export function AnalysisProgress({
           </p>
         </div>
 
-        <NowReading facts={facts} />
+        <aside className="flex flex-col gap-6">
+          {/* 图由画师提供，`src` 一给占位框就退场（见 CharacterSlot） */}
+          <CharacterSlot
+            className="min-h-[220px] lg:min-h-[280px]"
+            briefZh={"押金侠 · 角色形象\n翻卷宗 / 可做 2 帧循环\n待画师提供"}
+          />
+          <NowReading facts={facts} />
+        </aside>
       </div>
     </section>
   );
@@ -158,7 +166,7 @@ function NowReading({ facts }: { facts: EvidenceFact[] }) {
   const fact = facts[index % facts.length]!;
 
   return (
-    <aside className="border-t border-paper/16 pt-6 lg:border-t-0 lg:pt-0">
+    <div className="border-t border-paper/16 pt-6">
       <p className="font-mono text-micro text-paper/45">
         正在读的这一条 · 共 {facts.length} 条
       </p>
@@ -174,7 +182,7 @@ function NowReading({ facts }: { facts: EvidenceFact[] }) {
           {fact.locator}
         </footer>
       </blockquote>
-    </aside>
+    </div>
   );
 }
 

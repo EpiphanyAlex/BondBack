@@ -26,11 +26,9 @@ interface VerdictMeta {
   fill: string;
   /** 卡头铺满块面之后，压在上面的字该用什么颜色 */
   onFillText: string;
-  /** 墨黑面上的文字、边框与衬底 */
+  /** 墨黑面上的文字与色块 */
   onDarkText: string;
   onDarkBg: string;
-  onDarkBorder: string;
-  onDarkWash: string;
 }
 
 export const VERDICT_META: Record<Verdict, VerdictMeta> = {
@@ -45,8 +43,6 @@ export const VERDICT_META: Record<Verdict, VerdictMeta> = {
     onFillText: "text-paper",
     onDarkText: "text-verdict-unlawful-on-dark",
     onDarkBg: "bg-verdict-unlawful-on-dark",
-    onDarkBorder: "border-verdict-unlawful-fill/55",
-    onDarkWash: "bg-verdict-unlawful-fill/12",
   },
   doubtful: {
     labelZh: "待举证",
@@ -60,8 +56,6 @@ export const VERDICT_META: Record<Verdict, VerdictMeta> = {
     onFillText: "text-ink",
     onDarkText: "text-verdict-doubtful-on-dark",
     onDarkBg: "bg-verdict-doubtful-on-dark",
-    onDarkBorder: "border-verdict-doubtful-fill/55",
-    onDarkWash: "bg-verdict-doubtful-fill/12",
   },
   lawful: {
     labelZh: "合法，别争",
@@ -74,8 +68,6 @@ export const VERDICT_META: Record<Verdict, VerdictMeta> = {
     onFillText: "text-paper",
     onDarkText: "text-verdict-lawful-on-dark",
     onDarkBg: "bg-verdict-lawful-on-dark",
-    onDarkBorder: "border-verdict-lawful-fill/55",
-    onDarkWash: "bg-verdict-lawful-fill/14",
   },
 };
 
@@ -125,36 +117,5 @@ export function VerdictIcon({
       <circle cx="12" cy="12" r="9" />
       <path d="M8 12.4l2.7 2.7L16 9.8" />
     </svg>
-  );
-}
-
-/**
- * 结论徽章。方角（这一版全站零圆角），`tone="dark"` 给墨黑面上用 ——
- * 浅底那套边框与衬底放到墨黑上会糊成一团。
- */
-export function VerdictBadge({
-  verdict,
-  tone = "light",
-  className,
-}: {
-  verdict: Verdict;
-  tone?: "light" | "dark";
-  className?: string;
-}) {
-  const meta = VERDICT_META[verdict];
-  const dark = tone === "dark";
-  return (
-    <span
-      className={cx(
-        "inline-flex shrink-0 items-center gap-1.5 border px-3 py-1.5 text-label font-bold",
-        dark ? meta.onDarkBorder : meta.border,
-        dark ? meta.onDarkWash : meta.wash,
-        dark ? meta.onDarkText : meta.text,
-        className,
-      )}
-    >
-      <VerdictIcon verdict={verdict} size={15} />
-      {meta.labelZh}
-    </span>
   );
 }

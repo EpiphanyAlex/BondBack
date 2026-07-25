@@ -15,14 +15,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { money } from "@/components/result/utils";
-import { VerdictBadge } from "@/components/result/verdict";
-import { SAMPLE_ANALYSIS, SAMPLE_CASE_INPUT } from "@/data/sample-case";
+import { CharacterSlot } from "@/components/character-slot";
 import { parseAmount } from "@/lib/case-draft";
 import { useCaseSession } from "@/lib/case-session";
-import type { Verdict } from "@/lib/types";
-
-const VERDICTS: Verdict[] = ["unlawful", "doubtful", "lawful"];
 
 /** 只留数字与小数点，边打边加千分位 —— 标题里的数要一眼认得出是钱。 */
 function formatWhileTyping(raw: string): string {
@@ -127,65 +122,14 @@ export function HomeHero() {
               </span>
             </div>
 
-            {/* 三档结论的交通灯语义在首屏就先教一遍 */}
-            <div className="mt-10 border-t border-paper/16 pt-6">
-              <p className="font-mono text-micro text-paper/45">
-                每一笔扣款只判三种结果
-              </p>
-              <ul className="mt-3.5 flex flex-wrap gap-2.5">
-                {VERDICTS.map((verdict) => (
-                  <li key={verdict}>
-                    <VerdictBadge verdict={verdict} tone="dark" />
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-3.5 max-w-[640px] text-label text-paper/55">
-                每条结论都附州法条编号与官方原文链接。房东占理的那一笔，它会直接告诉你别争
-                —— 不给虚假希望。
-              </p>
-            </div>
           </div>
 
-          {/* ── 右：一张真的战报 ──
-              稿子这一格留给押金侠的角色形象（待画师）。在画出来之前不摆
-              「待补图」的占位框：拿示例案子的真实战报顶上，这一格因此从
-              装饰位变成第二个论据 —— 它已经判过别人的三笔了。 */}
-          <aside className="border border-paper/20 p-6 md:p-7">
-            <p className="font-mono text-micro text-amount-hero">
-              示例战报 · NSW · 文件与当事人均为虚构
-            </p>
-            <p className="mt-5 font-mono text-micro text-paper/45">可争议</p>
-            <p className="font-number text-num-lg leading-none text-amount-hero">
-              {money(SAMPLE_ANALYSIS.ledger.disputableTotal)}
-            </p>
-            <p className="mt-2.5 font-mono text-caption text-paper/50">
-              押金 {money(SAMPLE_CASE_INPUT.bondAmount)} · 索扣{" "}
-              {money(SAMPLE_ANALYSIS.ledger.claimedTotal)}
-            </p>
-
-            <ul className="mt-6 flex flex-col gap-3 border-t border-paper/16 pt-5">
-              {SAMPLE_ANALYSIS.items.map((item) => (
-                <li
-                  key={item.description}
-                  className="flex items-baseline justify-between gap-3"
-                >
-                  <span className="min-w-0 truncate text-label text-paper/70">
-                    {item.description}
-                  </span>
-                  <span className="shrink-0 font-number text-num-sm text-paper">
-                    {money(item.amount)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/sample"
-              className="mt-6 inline-block border-b-2 border-seal pb-0.5 text-label font-bold text-paper"
-            >
-              看它怎么判这三笔 →
-            </Link>
-          </aside>
+          {/* ── 右：押金侠 ──
+              图由画师提供，`src` 一给占位框就退场（见 CharacterSlot）。 */}
+          <CharacterSlot
+            className="min-h-[320px] lg:min-h-[520px]"
+            briefZh={"押金侠 · 角色形象\n全身 / 抱臂等你填\n透明底 PNG · 待画师提供"}
+          />
         </div>
       </div>
 

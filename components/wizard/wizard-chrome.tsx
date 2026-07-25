@@ -26,7 +26,8 @@ export function WizardTopBar({
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-paper/90 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3">
+      {/* 三处容器（顶栏 / 内容 / 账本条）宽度必须一致，否则桌面上进度条和账本条对不齐 */}
+      <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3 lg:max-w-[720px]">
         {stepIndex === 0 ? (
           <Link
             href="/"

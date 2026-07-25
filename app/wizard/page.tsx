@@ -111,7 +111,11 @@ export default function WizardPage() {
       />
 
       <div ref={topRef} className="flex-1">
-        <div key={step.id} className="step-enter mx-auto max-w-md px-4 pb-8 pt-6">
+        {/* ≥lg 加宽到 720px、不分栏（design-tokens §4.3）—— 多栏表单是公认反模式 */}
+        <div
+          key={step.id}
+          className="step-enter mx-auto max-w-md px-4 pb-8 pt-6 lg:max-w-[720px]"
+        >
           <StepHeading step={step} />
 
           <div className="mt-6">

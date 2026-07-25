@@ -34,7 +34,7 @@ export function LedgerBar({
 
   return (
     <div className="sticky bottom-0 z-20 border-t border-ink-soft bg-ink text-white">
-      <div className="mx-auto max-w-md px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+      <div className="mx-auto max-w-md px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:max-w-[720px]">
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
             {hasNumbers ? (

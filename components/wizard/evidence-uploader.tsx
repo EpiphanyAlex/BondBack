@@ -8,7 +8,7 @@
  * 原始文件不出设备，压缩后的图片只在会话内存里。
  */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCaseSession } from "@/lib/case-session";
 import { PREFILL_FIELD_LABELS, type PrefillableField } from "@/lib/case-draft";
@@ -99,10 +99,33 @@ export function EvidenceUploader({
 }) {
   const { draft, updateDraft, applyPrefill } = useCaseSession();
   const [status, setStatus] = useState<Status>({ phase: "idle" });
+  /**
+   * 拖拽悬停中。
+   *
+   * 计数而不是布尔：`dragenter` / `dragleave` 会在落点内部的每个子元素上各冒泡
+   * 一次，用布尔的话鼠标划过里面那个「＋」就会误判成「拖出去了」，高亮一闪一闪。
+   */
+  const [dragDepth, setDragDepth] = useState(0);
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
 
   const evidence = draft.evidence;
   const remainingSlots = MAX_EVIDENCE_IMAGES - evidence.length;
+  const dragging = dragDepth > 0 && remainingSlots > 0;
+
+  /*
+   * 落在落点**之外**的文件，浏览器默认会直接打开它 —— 于是页面被那个 PDF 顶掉，
+   * 而这个产品无登录无数据库，向导填的一切只活在这块内存里，一走就全没了。
+   * 所以这一步在场期间，整窗吞掉所有非落点的拖放。只在本组件挂载时生效。
+   */
+  useEffect(() => {
+    const swallow = (event: DragEvent) => event.preventDefault();
+    window.addEventListener("dragover", swallow);
+    window.addEventListener("drop", swallow);
+    return () => {
+      window.removeEventListener("dragover", swallow);
+      window.removeEventListener("drop", swallow);
+    };
+  }, []);
 
   async function fileToEvidence(
     file: File,
@@ -259,38 +282,91 @@ export function EvidenceUploader({
         ))}
       </div>
 
+      {/* ── 落点 ──
+          「拖进来」原先只是一句文案：整个组件没有任何 drag 事件，把文件拖上去
+          浏览器会直接打开那个 PDF、把向导填的东西全冲掉。现在是真的能拖了。
+          拖拽悬停时整块翻成实心朱红：这是全站最强的一个颜色，用在「松手就开始」
+          这一刻正好 —— 落点必须在余光里也认得出来。 */}
       <button
         type="button"
         onClick={() => inputsRef.current[HERO_SLOT.kind]?.click()}
         disabled={remainingSlots <= 0}
-        className="flex w-full items-center gap-6 border-2 border-dashed border-seal/55 bg-seal/5 px-6 py-7 text-left transition-colors duration-150 hover:bg-seal/10 disabled:opacity-40"
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setDragDepth((depth) => depth + 1);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          // 没有这一行，光标会显示成「不可放置」
+          event.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={() => setDragDepth((depth) => Math.max(depth - 1, 0))}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragDepth(0);
+          void handleFiles(event.dataTransfer.files, HERO_SLOT.kind);
+        }}
+        className={`group flex w-full items-center gap-6 border-2 px-6 py-7 text-left transition-colors duration-150 disabled:opacity-40 ${
+          dragging
+            ? "border-solid border-seal bg-seal"
+            : "border-dashed border-seal/55 bg-seal/5 hover:border-solid hover:border-seal hover:bg-seal/12"
+        }`}
       >
-        {/* 稿子里的落点是一个大朱红「＋」，不是又一张描边卡 */}
-        <span className="font-number text-title leading-none text-verdict-unlawful">
+        {/* 落点的标记是一个大朱红加号；拖拽中整块变朱红，它反过来变米白 */}
+        <span
+          className={`text-title leading-none transition-colors duration-150 ${
+            dragging ? "text-paper" : "text-verdict-unlawful"
+          }`}
+          aria-hidden="true"
+        >
           ＋
         </span>
         <span className="min-w-0">
-          <span className="block text-section font-bold text-ink">
-            拖进来，或点击选择 · {HERO_SLOT.label}
+          <span
+            className={`block text-section font-bold transition-colors duration-150 ${
+              dragging ? "text-paper" : "text-ink"
+            }`}
+          >
+            {dragging
+              ? "松手，它就开始读"
+              : `拖进来，或点击选择 · ${HERO_SLOT.label}`}
           </span>
-          <span className="mt-1.5 block text-label text-muted">
+          <span
+            className={`mt-1.5 block text-label transition-colors duration-150 ${
+              dragging ? "text-paper/80" : "text-muted"
+            }`}
+          >
             扣款清单 / 入住报告 / 租约 / 聊天截图 · PDF 与图片都行。
             入住报告最关键 —— 它能推翻大多数扣款。
           </span>
         </span>
       </button>
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* ── 分类入口 ──
+          hover 原先只是 `border-ink/40`：白卡放在米白纸上，一条发丝线深一点点，
+          鼠标扫过去等于没有反馈。现在给三个同时发生的信号 ——
+          顶边落下一道朱红（与首页流水线同一个装置）、加号变朱红、描边转墨黑。 */}
+      <div className="grid gap-2.5 md:grid-cols-2">
         {UPLOAD_SLOTS.map((slot) => (
           <button
             key={slot.kind}
             type="button"
             onClick={() => inputsRef.current[slot.kind]?.click()}
             disabled={remainingSlots <= 0}
-            className="h-full w-full border border-line bg-card px-3.5 py-3.5 text-left transition-colors duration-150 hover:border-ink/40 disabled:opacity-40"
+            className="group relative h-full w-full border border-line bg-card px-4 py-3.5 text-left transition-colors duration-150 hover:border-ink disabled:opacity-40 disabled:hover:border-line"
           >
+            <span
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 h-[3px] bg-seal opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-disabled:opacity-0"
+            />
             <span className="block text-label font-medium text-ink">
-              + {slot.label}
+              <span
+                aria-hidden="true"
+                className="mr-1.5 text-faint transition-colors duration-150 group-hover:text-verdict-unlawful"
+              >
+                +
+              </span>
+              {slot.label}
             </span>
             <span className="mt-0.5 block text-caption leading-snug text-muted">
               {slot.hint}
@@ -334,7 +410,7 @@ export function EvidenceUploader({
                   type="button"
                   onClick={() => removeEvidence(item.id)}
                   aria-label={`删除 ${item.fileName}`}
-                  className="absolute right-1 top-1 bg-ink/80 px-2 py-0.5 text-micro text-paper"
+                  className="absolute right-1 top-1 bg-ink/80 px-2 py-0.5 font-mono text-micro text-paper transition-colors duration-150 hover:bg-seal"
                 >
                   删除
                 </button>

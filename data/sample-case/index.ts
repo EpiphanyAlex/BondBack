@@ -475,7 +475,7 @@ export const SAMPLE_REPLAY_TIMELINE: ReplayBeat[] = [
   {
     id: "beat-card-garden",
     kind: "card-reveal",
-    atMs: 11500,
+    atMs: 12200,
     labelZh: "花园 / 草坪维护 $340",
     detailZh: "待举证 · 可争议 $340",
     itemIndex: 1,
@@ -483,7 +483,7 @@ export const SAMPLE_REPLAY_TIMELINE: ReplayBeat[] = [
   {
     id: "beat-card-water",
     kind: "card-reveal",
-    atMs: 12000,
+    atMs: 13400,
     labelZh: "未付水费 $186",
     detailZh: "合法，别争",
     itemIndex: 2,
@@ -491,7 +491,7 @@ export const SAMPLE_REPLAY_TIMELINE: ReplayBeat[] = [
   {
     id: "beat-result",
     kind: "result",
-    atMs: 12600,
+    atMs: 14600,
     labelZh: "3 笔扣款逐项对照完成",
     detailZh: "可争议 $1,120 · 应退回至少 $3,374",
   },

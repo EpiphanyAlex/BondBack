@@ -41,24 +41,30 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
 
   return (
     <div className={highlight ? "prefilled " : ""}>
-      <ul className="space-y-2.5">
+      {/* 一行一笔：序号与「删除」压在行首那条细线上，描述与金额并排。
+          原来每一笔外面还套一个白卡，卡里又是两个描边输入框 —— 盒中盒，
+          一笔占掉大半屏，看着又挤又空。行与行之间只用一条发丝线分。 */}
+      <ul className="flex flex-col">
         {draft.deductions.map((item, index) => (
-          <li key={item.id} className="border border-line bg-card p-3">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-micro text-muted">
-                {String(index + 1).padStart(2, "0")}
+          <li
+            key={item.id}
+            className="border-t border-line pt-3 pb-5 first:border-t-0 first:pt-0"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <span className="font-mono text-micro text-faint">
+                第 {String(index + 1).padStart(2, "0")} 笔
               </span>
               {draft.deductions.length > 1 ? (
                 <button
                   type="button"
                   onClick={() => removeRow(item.id)}
-                  className="px-2 py-1 text-caption text-muted"
+                  className="-mr-1 px-2 py-1 text-caption text-muted transition-colors duration-150 hover:text-verdict-unlawful"
                 >
                   删除
                 </button>
               ) : null}
             </div>
-            <div className="mt-1.5 space-y-2">
+            <div className="mt-2 grid gap-3 md:grid-cols-[minmax(0,1fr)_12.5rem]">
               <TextInput
                 value={item.description}
                 placeholder="扣款项目，例如 professional cleaning"
@@ -68,6 +74,7 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
                 }
               />
               <AmountInput
+                ariaLabel={`第 ${index + 1} 项扣款金额`}
                 value={item.amount}
                 onChange={(value) => patch(item.id, { amount: value })}
               />
@@ -76,17 +83,20 @@ export function DeductionList({ highlight = false }: { highlight?: boolean }) {
         ))}
       </ul>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-ink pt-3.5">
         <button
           type="button"
           onClick={addRow}
-          className="border border-line bg-card px-3.5 py-2 text-label font-medium text-ink active:scale-[0.98]"
+          className="border border-line bg-card px-3.5 py-2 text-label font-medium text-ink transition-colors duration-150 hover:border-ink active:scale-[0.98]"
         >
           + 再加一项
         </button>
         {total !== undefined ? (
-          <p className="tnum font-mono text-label text-muted">
-            合计 ${total.toLocaleString("en-AU")}
+          <p className="tnum text-label text-muted">
+            合计{" "}
+            <span className="font-number text-num-sm align-middle text-amount">
+              ${total.toLocaleString("en-AU")}
+            </span>
           </p>
         ) : null}
       </div>

@@ -6,24 +6,31 @@
  * 整幅墨黑，五段进度串在顶上，底下三栏各管一件事：
  *   左   四份材料      逐份飞入并打勾
  *   中   读出的事实    每读到一条就多一句可引用的原句（这一栏是产品的命门）
- *   右   预填的字段    金色扫过，外加重放控制（暂停 / 重放 / 跳到结果）
+ *   右   它替你填好的  金色扫过的三格
  * 翻卡那一拍在三栏下面整幅展开一张真的 `ComparisonCard`，一次只留最新的一张。
- * 播完由 `app/sample/page.tsx` 换成 `ResultView` 本体。
+ * 最后一拍之后由 `ReplayFinale` 把判决横幅升起来停两秒，再换成 `ResultView` 本体
+ * —— 结果页第一幕就是同一条横幅，所以换页发生在「同一块深色面」上，不再是硬切。
  *
  * 三条硬约束一条没松：
  * - **零网络请求**：数据全是 04a 的模块常量，组件全部静态 import
- * - **「跳过」常驻**：右栏的重放控制第 0 拍就已渲染，任何时刻可点
+ * - **「跳过」常驻**：顶栏右上角第 0 拍就已渲染，任何时刻可点
  * - `prefers-reduced-motion: reduce` 由 `useReplay` 负责，一拍都不播直接落地
+ *
+ * 控制只留「跳过」一个：这段重放 15 秒、结束后完整结果就在下面，
+ * 暂停与重放（原本挤在右栏底下）解决不了任何真实的观看问题，
+ * 只是把三个按钮摆在了用户最该看内容的位置上。重看的入口在结果页顶栏。
  *
  * 与真实分析页的关系：那边（`AnalysisProgress`）也是墨黑面 + 金色引语逐条推出，
  * 视觉语言是同一套；这里不再嵌那个组件，因为它自带整幅一幕的排版，
  * 套进重放的三栏里会出现两层「幕」。
  */
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { EVIDENCE_KIND_LABEL } from "@/components/evidence/evidence-thumb";
 import { ComparisonCard } from "@/components/result/comparison-card";
+import { HeadlineLedger } from "@/components/result/headline-ledger";
 import { money } from "@/components/result/utils";
 import type {
   AnalysisResult,
@@ -43,14 +50,24 @@ const FIELD_LABEL: Record<PrefillField, string> = {
   bondNumber: "押金号",
 };
 
-function fieldValue(field: PrefillField, input: CaseInput): string {
+/**
+ * 字段的值。**只有数字部分走 Anton**（`font-number`）—— Anton 没有汉字，
+ * 「3 项」整串交给它，那个「项」会落到系统黑体上，粗细与旁边的数字对不上。
+ * 单位另起一个 `font-sans` 的小 span，字面分工照 design-tokens §1.5。
+ */
+function fieldValue(field: PrefillField, input: CaseInput): ReactNode {
   switch (field) {
     case "bondAmount":
       return money(input.bondAmount);
     case "claimedAmount":
       return money(input.claimedAmount);
     case "deductions":
-      return `${input.deductions.length} 项`;
+      return (
+        <>
+          {input.deductions.length}
+          <span className="ml-1.5 font-sans text-label">项</span>
+        </>
+      );
     case "moveOutDate":
       return input.moveOutDate;
     case "propertyAddress":
@@ -90,10 +107,7 @@ export interface ReplayStageProps {
   analysis: AnalysisResult;
   beats: ReplayBeat[];
   firedCount: number;
-  paused: boolean;
   onSkip: () => void;
-  onTogglePause: () => void;
-  onRestart: () => void;
 }
 
 export function ReplayStage({
@@ -101,10 +115,7 @@ export function ReplayStage({
   analysis,
   beats,
   firedCount,
-  paused,
   onSkip,
-  onTogglePause,
-  onRestart,
 }: ReplayStageProps) {
   const fired = beats.slice(0, firedCount);
   const current = firedCount > 0 ? beats[firedCount - 1] : null;
@@ -132,13 +143,23 @@ export function ReplayStage({
               一个 {caseInput.state} 案子，从材料到判决
             </h1>
           </div>
-          {/* 军规：示例必须标虚构，而且要在第 0 拍就在场 */}
-          <p className="inline-flex items-center gap-2.5 border border-gold-bright/50 px-4 py-2">
-            <span className="size-2 rounded-full bg-gold-bright" />
-            <span className="font-mono text-micro text-paper/80">
-              文件与当事人均为虚构
-            </span>
-          </p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            {/* 军规：示例必须标虚构，而且要在第 0 拍就在场 */}
+            <p className="inline-flex items-center gap-2.5 border border-gold-bright/50 px-4 py-2">
+              <span className="size-2 rounded-full bg-gold-bright" />
+              <span className="font-mono text-micro text-paper/80">
+                文件与当事人均为虚构
+              </span>
+            </p>
+            {/* 唯一的控制。放在顶栏右上角 —— 想跳过的人本来就往这里找 */}
+            <button
+              type="button"
+              onClick={onSkip}
+              className="border border-paper/35 px-4 py-2 font-mono text-micro text-paper transition-colors duration-150 hover:bg-paper/10"
+            >
+              跳过重放 →
+            </button>
+          </div>
         </div>
 
         {/* ── 五段进度：走到哪一段，那一段的顶线就亮 ── */}
@@ -267,59 +288,41 @@ export function ReplayStage({
             )}
           </div>
 
-          {/* ── 右：预填的字段 + 重放控制 ── */}
+          {/* ── 右：它替你填好的三格 ──
+              标题原来叫「已预填的字段」——「预填」「字段」都是做表单的人的词，
+              用户这边看到的事实是「我还没动手，它已经替我填好了」。
+              另：这几格原本靠 `.prefilled` 收在 `--card`（白）上，扫过之后
+              墨黑面上永久留下三个白盒子，标签是白底浅灰字，等于看不见。
+              globals.css 已把金光的收尾改成 transparent，扫完只剩金色底边与金色数字。 */}
           <div>
-            <p className="font-mono text-micro text-paper/45">已预填的字段</p>
+            <p className="font-mono text-micro text-paper/45">它替你填好的</p>
             <dl className="mt-3.5 flex flex-col gap-2.5">
               {(prefillBeat?.fields ?? []).map((field, index) => (
                 <div
                   key={field}
-                  className="prefilled flex items-baseline justify-between border-b-2 border-gold-bright bg-gold-bright/14 px-3.5 py-2.5"
+                  className="prefilled flex items-baseline justify-between gap-4 border-b-2 border-gold-bright px-3.5 py-3"
                   style={{
                     animationDelay: `calc(var(--duration-quick) * ${index * 2})`,
                   }}
                 >
-                  <dt className="text-label text-paper/70">
+                  <dt className="text-label text-paper/75">
                     {FIELD_LABEL[field]}
                   </dt>
-                  <dd className="font-number text-num-sm text-amount-hero">
+                  <dd className="shrink-0 font-number text-num-sm leading-none text-amount-hero">
                     {fieldValue(field, caseInput)}
                   </dd>
                 </div>
               ))}
-              {prefillBeat ? null : (
+              {prefillBeat ? (
+                <p className="mt-1.5 text-caption leading-relaxed text-paper/50">
+                  这三格是从扣款清单上读出来的。到了核对那一步，改一下就变成你的答案。
+                </p>
+              ) : (
                 <p className="text-label text-paper/45">
-                  读到扣款清单时，这里会自动填出押金、被扣与明细。
+                  读到扣款清单时，押金、被扣与明细会自己填上，你不用手打。
                 </p>
               )}
             </dl>
-
-            <div className="mt-8 border-t border-paper/16 pt-5">
-              <p className="font-mono text-micro text-paper/45">重放控制</p>
-              <div className="mt-3.5 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={onTogglePause}
-                  className="bg-seal px-5 py-2.5 text-label font-bold text-paper"
-                >
-                  {paused ? "继续" : "暂停"}
-                </button>
-                <button
-                  type="button"
-                  onClick={onRestart}
-                  className="border border-paper/35 px-4 py-2.5 text-label font-bold text-paper transition-colors duration-150 hover:bg-paper/10"
-                >
-                  重放
-                </button>
-                <button
-                  type="button"
-                  onClick={onSkip}
-                  className="font-mono text-micro text-paper/60 underline underline-offset-4"
-                >
-                  跳到结果 →
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -362,5 +365,47 @@ export function ReplayStage({
         </div>
       </div>
     </section>
+  );
+}
+
+/* ── 落幕：判决先落定，页面再在它底下展开 ────────────────────────────── */
+
+/**
+ * 最后一拍与结果页之间的两秒。
+ *
+ * 三张卡翻完就直接换成 `ResultView`，是从「一个正在跑的过程」硬切到「一整页结果」，
+ * 视线没有落点。这里先把结果页的第一幕 —— 同一条 `HeadlineLedger` 判决横幅 ——
+ * 单独升起来：底色同为墨黑，横幅在页面同一个位置，两秒后 `ResultView` 挂上来时
+ * 这条横幅原地不动，只是它底下多出了逐笔、信、路线。换页因此看起来像「继续展开」。
+ *
+ * 不给按钮：这两秒里唯一合理的动作是等，而它自己会走完。
+ */
+export function ReplayFinale({
+  caseInput,
+  analysis,
+}: {
+  caseInput: CaseInput;
+  analysis: AnalysisResult;
+}) {
+  return (
+    <div className="min-h-dvh bg-ink">
+      <div className="step-enter">
+        <HeadlineLedger
+          bondAmount={caseInput.bondAmount}
+          ledger={analysis.ledger}
+          mode={analysis.mode}
+          items={analysis.items}
+          stateLabel={caseInput.state}
+          propertyAddress={caseInput.propertyAddress}
+          moveOutDate={caseInput.moveOutDate}
+        />
+      </div>
+      <p
+        className="mx-auto w-full max-w-[1152px] px-4 font-mono text-micro text-paper/40 md:px-6"
+        aria-live="polite"
+      >
+        逐笔依据、申诉信与行动路线，正在下面展开…
+      </p>
+    </div>
   );
 }

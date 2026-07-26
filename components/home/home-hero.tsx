@@ -48,21 +48,29 @@ export function HomeHero() {
   return (
     <section className="bg-ink text-paper">
       <div className="mx-auto w-full max-w-[1152px] px-4 md:px-6">
-        {/* ── 顶栏 ── */}
-        <header className="flex items-center justify-between border-b border-paper/12 py-4 md:py-5">
+        {/* ── 顶栏 ──
+            `relative z-10`：右边的侠客图在 lg 上放大到 125%，会从格子里溢出来
+            盖住顶栏；不抬高层级，这两个链接就点不到（图那边另配 pointer-events-none）。 */}
+        <header className="relative z-10 flex items-center justify-between gap-4 border-b border-paper/12 py-4 md:py-5">
           <Link href="/" aria-label="押金侠首页">
             <BrandLockup />
           </Link>
-          <nav className="flex items-center gap-5 md:gap-8">
-            <a href="#how" className="text-label text-paper/60">
+          {/* NSW · VIC 已整条删掉：它是「支持哪两个州」，不是去处，
+              摆在导航里既点不动又像个断掉的菜单项；侠客图脚下那摞书上就印着
+              NSW / VIC，向导第一步也要选州，这里再说一次是多的。 */}
+          <nav className="flex items-center gap-6 md:gap-9">
+            <a
+              href="#how"
+              className="border-b border-transparent pb-0.5 text-label text-paper/60 transition-colors duration-150 hover:border-seal hover:text-paper"
+            >
               怎么判
             </a>
-            <Link href="/sample" className="text-label text-paper/60">
+            <Link
+              href="/sample"
+              className="border-b border-transparent pb-0.5 text-label text-paper/60 transition-colors duration-150 hover:border-seal hover:text-paper"
+            >
               真实案例
             </Link>
-            <span className="hidden font-mono text-micro text-paper/40 md:inline">
-              NSW · VIC
-            </span>
           </nav>
         </header>
 
@@ -70,7 +78,7 @@ export function HomeHero() {
           {/* ── 左：喊话 + 合体式金额 + 主行动 ── */}
           <div>
             <p className="font-mono text-micro text-amount-hero">
-              填一个数，两分钟出结论 · 不注册
+              两分钟出结论 · 不注册
             </p>
 
             <h1 className="h-shout mt-5 text-hero">
@@ -111,7 +119,7 @@ export function HomeHero() {
                 onClick={start}
                 className={`px-8 py-4 text-section font-bold transition-colors duration-300 ${
                   hasAmount
-                    ? "bg-seal text-paper"
+                    ? "bg-seal text-paper hover:bg-seal/90"
                     : "bg-seal/35 text-paper/60 hover:bg-seal/55"
                 }`}
               >
@@ -129,7 +137,9 @@ export function HomeHero() {
             src="/character/hero-xia.png"
             alt="押金侠俯身用放大镜核对证据卷宗与 NSW、VIC 租赁法资料"
             eager
-            className="min-h-[320px] object-bottom lg:min-h-[600px] lg:origin-bottom-right lg:scale-125"
+            /* pointer-events-none：放大 125% 后它的盒子会盖到顶栏上，
+               透明像素照样吃点击。它是装饰，不该拦住任何一次点击。 */
+            className="pointer-events-none min-h-[320px] object-bottom lg:min-h-[600px] lg:origin-bottom-right lg:scale-125"
             briefZh={"押金侠 · 卷宗游侠\n俯身查证据与法条"}
           />
         </div>
@@ -140,7 +150,7 @@ export function HomeHero() {
       <div className="mx-auto w-full max-w-[1152px] px-4 md:px-6">
         <a
           href="#how"
-          className="flex items-center gap-5 bg-paper px-5 py-5 text-ink md:px-7"
+          className="group flex items-center gap-5 bg-paper px-5 py-5 text-ink transition-colors duration-150 hover:bg-card md:px-7"
         >
           <span className="hidden font-mono text-micro text-faint md:inline">
             往下 · 第 2 幕

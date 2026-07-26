@@ -8,41 +8,28 @@
  *
  * 纪律：
  * - 零网络请求 —— 数据全是 04a 的模块常量，这里只管时间
- * - reduce 的判断走 `useSyncExternalStore`：服务端快照恒为 `false`，
- *   客户端接管后自然纠正，既不会 hydration mismatch 也不用在 effect 里 setState
+ * - reduce 的判断走 `lib/reduced-motion.ts`（`useSyncExternalStore`），
+ *   与首页第 2 幕的轮播共用同一处读法
  * - `atMs` 已经排在 `--duration-beat`（1200ms）的格子上，这里不再自己造节拍
  */
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useReducedMotion } from "@/lib/reduced-motion";
 import type { ReplayBeat } from "@/lib/types";
 
-const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
-
-function subscribeReducedMotion(onChange: () => void): () => void {
-  const query = window.matchMedia?.(REDUCE_QUERY);
-  query?.addEventListener("change", onChange);
-  return () => query?.removeEventListener("change", onChange);
-}
-
-function getReducedMotion(): boolean {
-  return Boolean(window.matchMedia?.(REDUCE_QUERY).matches);
-}
-
-/** 服务端渲染时没有 matchMedia，先当作「可以播」，客户端接管后再纠正。 */
-function getServerReducedMotion(): boolean {
-  return false;
-}
+/**
+ * 落幕停顿：最后一拍（`result`）之后不立刻换页，先在墨黑面上把判决横幅升起来。
+ * 结果页的第一幕正是同一条横幅，所以这一停顿把「三张卡翻完 → 突然换成另一页」
+ * 变成「同一块深色面上，结论先落定，页面再在它底下展开」。
+ */
+const OUTRO_MS = 2000;
 
 export type ReplayStatus =
   /** 正在逐拍推进 */
   | "playing"
+  /** 最后一拍已落、判决横幅升起，正在过渡到结果页 */
+  | "outro"
   /** 播完、跳过、或 reduce 直接落地 —— 一律停在结果页 */
   | "finished";
 
@@ -65,14 +52,11 @@ export interface ReplayState {
 }
 
 export function useReplay(beats: ReplayBeat[]): ReplayState {
-  const reducedMotion = useSyncExternalStore(
-    subscribeReducedMotion,
-    getReducedMotion,
-    getServerReducedMotion,
-  );
+  const reducedMotion = useReducedMotion();
 
   const [firedCount, setFiredCount] = useState(0);
   const [ended, setEnded] = useState(false);
+  const [outro, setOutro] = useState(false);
   const [paused, setPaused] = useState(false);
 
   /**
@@ -82,7 +66,14 @@ export function useReplay(beats: ReplayBeat[]): ReplayState {
   const playedRef = useRef(0);
 
   const status: ReplayStatus =
-    ended || reducedMotion ? "finished" : "playing";
+    ended || reducedMotion ? "finished" : outro ? "outro" : "playing";
+
+  // 落幕停顿走完再换页；「跳过」不经过它，点了就直达结果
+  useEffect(() => {
+    if (status !== "outro") return;
+    const timer = window.setTimeout(() => setEnded(true), OUTRO_MS);
+    return () => window.clearTimeout(timer);
+  }, [status]);
 
   useEffect(() => {
     if (status !== "playing" || paused) return;
@@ -97,8 +88,8 @@ export function useReplay(beats: ReplayBeat[]): ReplayState {
         if (beat.atMs < base) return null;
         return window.setTimeout(() => {
           setFiredCount(index + 1);
-          // `result` 拍就是「停在完整结果页」；没有这一拍时用最后一拍兜底
-          if (beat.kind === "result" || index === last) setEnded(true);
+          // `result` 拍是「判决落定」；换页交给上面那段落幕停顿
+          if (beat.kind === "result" || index === last) setOutro(true);
         }, beat.atMs - base);
       })
       .filter((id): id is number => id !== null);
@@ -115,6 +106,7 @@ export function useReplay(beats: ReplayBeat[]): ReplayState {
     playedRef.current = 0;
     setFiredCount(0);
     setEnded(false);
+    setOutro(false);
     setPaused(false);
   }, []);
 

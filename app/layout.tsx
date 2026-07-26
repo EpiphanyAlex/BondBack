@@ -108,7 +108,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    /*
+      suppressHydrationWarning 只作用于 <html> 这一个标签的属性比对。
+      浏览器扩展（沉浸式翻译、深色模式类插件、密码管理器）会在 React 接管之前
+      往 <html> 上挂自己的属性（`data-immersive-translate-page-theme` 之类），
+      服务端渲染的 HTML 里没有，于是每次都报一条 hydration mismatch。
+      这不是我们的渲染问题，也修不掉 —— 用户装了什么扩展不归页面管。
+      它不会掩盖子树里真正的 mismatch：这个属性只压 <html> 自身，不向下传递。
+    */
     <html
+      suppressHydrationWarning
       lang="zh-CN"
       className={`${notoSansSc.variable} ${anton.variable} ${plexMono.variable} h-full antialiased`}
     >

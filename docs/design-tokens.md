@@ -146,9 +146,16 @@ Tailwind v4 的 `duration-*` 不走主题，所以**时长在 `:root` 定义为�
 | `--duration-settle` | `280ms` | 步骤进场、卡片翻开（`rise-in`） |
 | `--duration-sweep` | `1600ms` | 预填魔法的金色扫过（`prefill-sweep`） |
 | `--duration-beat` | `1200ms` | `/sample` 重放动画的一个节拍 |
+| `--duration-dwell` | `7000ms` | 首页第 2 幕自动轮播每一段的停留时长（`.tab-dwell`）|
 | `ease-settle` | `cubic-bezier(0.22, 1, 0.36, 1)` | 所有进场动画统一缓动 |
 
 `prefers-reduced-motion: reduce` 的全局降级已在 `globals.css` 中处理，新动画无需各自再写。
+
+**唯一例外是「由动画驱动逻辑」的两处**：`/sample` 的重放时钟、首页第 2 幕的轮播换段
+（换段由 `.tab-dwell` 的 `animationend` 触发）。全局降级把时长压成 `0.01ms`，
+这类动画会瞬间跑完并疯狂触发回调，所以它们必须在 JS 里先问一次
+`lib/reduced-motion.ts` 的 `useReducedMotion()`，`reduce` 时**根本不挂这个动画**。
+纯装饰动画不必来这一趟。
 
 ---
 

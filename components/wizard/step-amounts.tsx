@@ -38,12 +38,16 @@ export function StepAmounts({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* 一张网格排完五格，两列到底：
+          必填的三格（押金 / 被扣 / 退租日期）在前，两个选填的跟在后面。
+          原来分成两个 grid，第二个 grid 里三格填两列，押金号被剩在左下角，
+          右边空出半格 —— 看着像漏了一个字段。 */}
       <SectionCard title="押金和被扣的钱">
-        {/* 两个金额并排：它们是一对，稿子里也是左右各一格 */}
-        <div className="grid max-w-[600px] gap-5 md:grid-cols-2">
+        <div className="grid max-w-[620px] gap-x-6 gap-y-7 md:grid-cols-2">
           <Field
             label="押金总额"
             htmlFor="bond-amount"
+            hint="租约开始时交出去的那一笔。"
             highlight={filled("bondAmount")}
           >
             <AmountInput
@@ -71,12 +75,11 @@ export function StepAmounts({
               }}
             />
           </Field>
-        </div>
 
-        <div className="mt-5 grid max-w-[600px] gap-5 md:grid-cols-2">
           <Field
             label="退租日期"
             htmlFor="move-out-date"
+            hint="交钥匙那天。所有时限都从它往后算。"
             highlight={filled("moveOutDate")}
           >
             <DateInput
@@ -85,23 +88,6 @@ export function StepAmounts({
               onChange={(value) => {
                 markTouched("moveOutDate");
                 updateDraft({ moveOutDate: value });
-              }}
-            />
-          </Field>
-
-          <Field
-            label="房屋地址"
-            htmlFor="property-address"
-            hint="选填。写上后维权信里会直接带上，不用再改。"
-            highlight={filled("propertyAddress")}
-          >
-            <TextInput
-              id="property-address"
-              value={draft.propertyAddress}
-              placeholder="例如 12/34 Example St, Sydney NSW 2000"
-              onChange={(event) => {
-                markTouched("propertyAddress");
-                updateDraft({ propertyAddress: event.target.value });
               }}
             />
           </Field>
@@ -122,10 +108,30 @@ export function StepAmounts({
               }}
             />
           </Field>
+
+          {/* 地址整行：一行地址塞进半格必然被截断（见截图里的 Marrickville NSW…）*/}
+          <div className="md:col-span-2">
+            <Field
+              label="房屋地址"
+              htmlFor="property-address"
+              hint="选填。写上后维权信里会直接带上，不用再改。"
+              highlight={filled("propertyAddress")}
+            >
+              <TextInput
+                id="property-address"
+                value={draft.propertyAddress}
+                placeholder="例如 12/34 Example St, Sydney NSW 2000"
+                onChange={(event) => {
+                  markTouched("propertyAddress");
+                  updateDraft({ propertyAddress: event.target.value });
+                }}
+              />
+            </Field>
+          </div>
         </div>
 
         {claimedOverBond ? (
-          <div className="mt-5 max-w-[600px]">
+          <div className="mt-6 max-w-[620px]">
             <Callout tone="warn" title="被扣金额超过了押金总额">
               可能是打字打错了，也可能对方在押金之外另外索赔。两种情况都可以继续，
               分析时会一并说明。
@@ -140,7 +146,7 @@ export function StepAmounts({
       >
         <DeductionList highlight={filled("deductions")} />
         {totalMismatch ? (
-          <p className="mt-3 text-caption leading-relaxed text-muted">
+          <p className="mt-3.5 text-caption leading-relaxed text-muted">
             明细合计 ${total?.toLocaleString("en-AU")} 和你填的被扣金额对不上。
             不影响继续，分析时会以明细为准逐项判断。
           </p>

@@ -19,10 +19,11 @@ export function StepEvidence({
 }) {
   return (
     <div className="flex flex-col gap-6">
-      <SectionCard
-        title="拖进来，或点击选择文件"
-        hint="AI 会读出押金、被扣金额、退租日期和扣款明细，直接填进下一步的表。图片只留在这次会话里，不上传存档。"
-      >
+      {/* 不再给这一组起「拖进来，或点击选择文件」的小标题：
+          页面抬头已经是「手里有什么，先传上来」，落点上还写着「拖进来，或点击选择」
+          —— 同一句话连说三遍，读者只会跳过。这里只留它们都没说的那件事：
+          读出来干什么用、图片去了哪。 */}
+      <SectionCard hint="AI 会读出押金、被扣金额、退租日期和扣款明细，直接填进下一步的表。图片只留在这次会话里，不上传存档。">
         <EvidenceUploader onPrefilled={onPrefilled} />
       </SectionCard>
 

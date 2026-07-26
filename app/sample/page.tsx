@@ -14,9 +14,10 @@
  * - **`prefers-reduced-motion: reduce`**：一拍都不播，挂载后直接落到结果页
  */
 
+import { useEffect } from "react";
 import Link from "next/link";
 
-import { ReplayStage } from "@/components/replay/replay-stage";
+import { ReplayFinale, ReplayStage } from "@/components/replay/replay-stage";
 import { useReplay } from "@/components/replay/use-replay";
 import { ResultView } from "@/components/result/result-view";
 import { WarCardShare } from "@/components/share/war-card";
@@ -44,6 +45,22 @@ const SHARE_NOTES = [
 export default function SamplePage() {
   const replay = useReplay(SAMPLE_REPLAY_TIMELINE);
 
+  /*
+   * 落幕与换页都回到页顶。翻卡那一段会把舞台撑长，用户多半正停在页面中段；
+   * 不回顶，判决横幅就升在视口外，两秒停顿等于白留。
+   */
+  useEffect(() => {
+    if (replay.status === "playing") return;
+    window.scrollTo({ top: 0 });
+  }, [replay.status]);
+
+  // 最后一拍之后的两秒：判决横幅先落定，下一帧 ResultView 在它底下展开
+  if (replay.status === "outro") {
+    return (
+      <ReplayFinale caseInput={SAMPLE_CASE_INPUT} analysis={SAMPLE_ANALYSIS} />
+    );
+  }
+
   if (replay.status !== "finished") {
     return (
       <ReplayStage
@@ -51,10 +68,7 @@ export default function SamplePage() {
         analysis={SAMPLE_ANALYSIS}
         beats={SAMPLE_REPLAY_TIMELINE}
         firedCount={replay.firedCount}
-        paused={replay.paused}
         onSkip={replay.skip}
-        onTogglePause={replay.togglePause}
-        onRestart={replay.restart}
       />
     );
   }
@@ -73,12 +87,11 @@ export default function SamplePage() {
         }
       />
 
+      {/* 卡靠左、说明靠右，整块收在一张卡面里、限宽 880 ——
+          上一版标题压在卡上方、说明只有两行贴在卡右边，卡右侧空出大半个屏，
+          在桌面上像是布局塌了一半。标题搬到右栏，卡与文字互相收边。 */}
       <section className="mx-auto w-full max-w-[1152px] border-t border-line px-4 pb-12 pt-9 md:px-6">
-        <h2 className="h-shout text-title text-ink">带走这张战报卡</h2>
-        <p className="mt-2 max-w-[520px] text-label text-muted">
-          转发给还在纠结要不要认栽的室友。
-        </p>
-        <div className="mt-5 lg:grid lg:grid-cols-[360px_minmax(0,420px)] lg:items-start lg:gap-8">
+        <div className="max-w-[880px] border border-line bg-card p-5 md:p-7 lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-9">
           <WarCardShare
             sample
             bondAmount={SAMPLE_CASE_INPUT.bondAmount}
@@ -87,16 +100,36 @@ export default function SamplePage() {
             statuteCount={SAMPLE_STATUTE_COUNT}
             stateLabel={SAMPLE_CASE_INPUT.state}
           />
-          <ul className="mt-4 flex flex-col gap-2 lg:mt-0">
-            {SHARE_NOTES.map((note) => (
-              <li
-                key={note}
-                className="border-l-2 border-line pl-3.5 text-label text-muted"
+
+          {/* 右栏收在一个 CTA 上：看完别人的案子，下一步本来就是跑自己的 */}
+          <div className="mt-6 flex flex-col lg:mt-0">
+            <h2 className="h-shout text-title text-ink">带走这张战报卡</h2>
+            <p className="mt-2.5 text-label text-muted">
+              转发给还在纠结要不要认栽的室友。
+            </p>
+            <ul className="mt-5 flex flex-col gap-3">
+              {SHARE_NOTES.map((note) => (
+                <li
+                  key={note}
+                  className="border-l-2 border-line pl-3.5 text-label text-muted"
+                >
+                  {note}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-7 border-t border-line pt-6 lg:mt-auto">
+              <p className="text-section text-ink">
+                这张卡上的每个数字，都是从上面那四份材料里读出来的。
+              </p>
+              <Link
+                href="/wizard"
+                className="mt-4 inline-block bg-seal px-7 py-3.5 text-body font-bold text-paper transition-colors duration-150 hover:bg-seal/90"
               >
-                {note}
-              </li>
-            ))}
-          </ul>
+                换成我自己的案子 →
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </>

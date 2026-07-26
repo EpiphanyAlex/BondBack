@@ -20,6 +20,7 @@ import { toPng } from "html-to-image";
 import { toDataURL } from "qrcode";
 
 import { cx, formatMoney, money } from "@/components/result/utils";
+import { sameOriginFontEmbedCSS } from "@/lib/font-embed";
 import { SITE_URL } from "@/lib/site";
 import type { AnalysisLedger } from "@/lib/types";
 
@@ -60,86 +61,93 @@ export function WarCard({
   className,
 }: WarCardProps) {
   return (
+    /* 排版只有两团：**上面是「谁在说 + 说了什么」，下面是「凭什么 + 怎么用」**。
+       上一版四块平均分在 3:4 的高度里（justify-between），四道等距的缝把卡切成
+       四条，主数字反而不像主角。现在留白全部集中在两团之间。 */
     <div
       className={cx(
         "flex aspect-[3/4] w-full max-w-[360px] flex-col justify-between bg-ink px-5 py-5 text-paper",
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        {sample ? (
-          <span className="border border-gold-bright/50 px-2.5 py-1 font-mono text-micro text-paper/75">
-            示例案例
-          </span>
-        ) : (
-          <span />
-        )}
-        <span className="flex items-center gap-1.5 font-mono text-micro uppercase text-paper/55">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/logo-mark.png"
-            alt=""
-            aria-hidden="true"
-            width={20}
-            height={20}
-            className="size-5 object-contain"
-          />
-          BondBack · 押金侠
-        </span>
-      </div>
-
-      {/* 主数字：找出多少可争议扣款 —— 不是「追回了多少」 */}
       <div>
-        <p className="font-mono text-micro uppercase text-paper/55">
-          AI 逐项找出
-        </p>
-        <p className="mt-1.5 font-number text-num-lg leading-none text-amount-hero">
-          ${formatMoney(ledger.disputableTotal)}
-        </p>
-        <p className="h-shout mt-2 text-section text-paper">可争议扣款</p>
-        <p className="tnum mt-2 text-label leading-snug text-paper/70">
-          按此应退回至少{" "}
-          <span className="font-semibold text-paper">
-            {money(ledger.refundExpected)}
+        <div className="flex items-center justify-between gap-2">
+          {sample ? (
+            <span className="border border-gold-bright/50 px-2.5 py-1 font-mono text-micro text-paper/75">
+              示例案例
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="flex items-center gap-1.5 font-mono text-micro uppercase text-paper/55">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo-mark.png"
+              alt=""
+              aria-hidden="true"
+              width={20}
+              height={20}
+              className="size-5 object-contain"
+            />
+            BondBack · 押金侠
           </span>
-        </p>
-      </div>
+        </div>
 
-      <div className="border-t border-ink-soft pt-3">
-        <p className="tnum font-mono text-caption text-paper/60">
-          押金 {money(bondAmount)} · 索扣 {money(ledger.claimedTotal)}
-        </p>
-        <p className="tnum mt-0.5 font-mono text-caption text-paper/60">
-          {itemCount} 笔 · {stateLabel} 租赁法 {statuteCount} 条法条
-        </p>
-      </div>
-
-      <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-label leading-snug text-paper/80">
-            扫码，逐项比对你的扣款单
+        {/* 主数字：找出多少可争议扣款 —— 不是「追回了多少」 */}
+        <div className="mt-7">
+          <p className="font-mono text-micro uppercase text-paper/55">
+            AI 逐项找出
           </p>
-          <p className="mt-1 text-caption leading-snug text-paper/45">
-            信息辅助，不构成法律意见
+          <p className="mt-2 font-number text-num-lg leading-none text-amount-hero">
+            ${formatMoney(ledger.disputableTotal)}
+          </p>
+          <p className="h-shout mt-2.5 text-section text-paper">可争议扣款</p>
+          <p className="tnum mt-2 text-label leading-snug text-paper/70">
+            按此应退回至少{" "}
+            <span className="font-semibold text-paper">
+              {money(ledger.refundExpected)}
+            </span>
           </p>
         </div>
-        <span className="shrink-0 bg-paper p-1.5">
-          {qrDataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={qrDataUrl}
-              alt={`扫码打开 BondBack（${SHARE_URL}）`}
-              width={QR_DISPLAY}
-              height={QR_DISPLAY}
-              className="block"
-            />
-          ) : (
-            <span
-              className="block"
-              style={{ width: QR_DISPLAY, height: QR_DISPLAY }}
-            />
-          )}
-        </span>
+      </div>
+
+      <div>
+        <div className="border-t border-ink-soft pt-3">
+          <p className="tnum font-mono text-caption text-paper/60">
+            押金 {money(bondAmount)} · 索扣 {money(ledger.claimedTotal)}
+          </p>
+          <p className="tnum mt-0.5 font-mono text-caption text-paper/60">
+            {itemCount} 笔 · {stateLabel} 租赁法 {statuteCount} 条法条
+          </p>
+        </div>
+
+        <div className="mt-5 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-label leading-snug text-paper/80">
+              扫码，逐项比对你的扣款单
+            </p>
+            <p className="mt-1 text-caption leading-snug text-paper/45">
+              信息辅助，不构成法律意见
+            </p>
+          </div>
+          <span className="shrink-0 bg-paper p-1.5">
+            {qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={qrDataUrl}
+                alt={`扫码打开 BondBack（${SHARE_URL}）`}
+                width={QR_DISPLAY}
+                height={QR_DISPLAY}
+                className="block"
+              />
+            ) : (
+              <span
+                className="block"
+                style={{ width: QR_DISPLAY, height: QR_DISPLAY }}
+              />
+            )}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -159,6 +167,7 @@ export function WarCardShare({
 }: WarCardShareProps) {
   const nodeRef = useRef<HTMLDivElement>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | undefined>(undefined);
+  const [fontCss, setFontCss] = useState<string | null>(null);
   const [png, setPng] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -181,9 +190,28 @@ export function WarCardShare({
     };
   }, []);
 
-  // 二维码就位后再截图，否则 PNG 里会缺一块
+  /*
+   * 字体先自己内联好再交给 toPng。不给它这一份，它会去遍历 document.styleSheets，
+   * 撞上 layout.tsx 里那张 Google Fonts 跨源表并抛 SecurityError（见 lib/font-embed.ts）。
+   * 失败也给空串：那同样能让它跳过遍历，卡照出，只是字体退到系统字。
+   */
   useEffect(() => {
-    if (!qrDataUrl || png) return;
+    let alive = true;
+    sameOriginFontEmbedCSS()
+      .then((css) => {
+        if (alive) setFontCss(css);
+      })
+      .catch(() => {
+        if (alive) setFontCss("");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 二维码与字体都就位后再截图，否则 PNG 里会缺一块
+  useEffect(() => {
+    if (!qrDataUrl || fontCss === null || png) return;
     let alive = true;
     let raf = 0;
     let frames = 0;
@@ -191,7 +219,11 @@ export function WarCardShare({
     const capture = () => {
       const node = nodeRef.current;
       if (!alive || !node) return;
-      void toPng(node, { pixelRatio: 3, cacheBust: false })
+      void toPng(node, {
+        pixelRatio: 3,
+        cacheBust: false,
+        fontEmbedCSS: fontCss ?? "",
+      })
         .then((url) => {
           if (alive) setPng(url);
         })
@@ -215,7 +247,7 @@ export function WarCardShare({
       alive = false;
       cancelAnimationFrame(raf);
     };
-  }, [qrDataUrl, png]);
+  }, [qrDataUrl, fontCss, png]);
 
   return (
     <div className={cx("flex flex-col items-start gap-2", className)}>

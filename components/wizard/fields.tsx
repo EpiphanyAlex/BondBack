@@ -36,6 +36,12 @@ export function SectionCard({
   );
 }
 
+/**
+ * 一格字段。**输入框一律沉到格子底部**（`mt-auto`）——
+ * 并排两格的说明句长度不会一样（「不确定就先留空…」比「押金总额」多两行），
+ * 若各自跟着标题往下排，同一行的两个输入框就会一高一低。
+ * 底对齐之后，一行里的输入框永远在同一条线上。
+ */
 export function Field({
   label,
   hint,
@@ -51,12 +57,14 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className={highlight ? "prefilled" : undefined}>
+    <div className={`flex h-full flex-col ${highlight ? "prefilled" : ""}`}>
       <label htmlFor={htmlFor} className="block font-mono text-micro text-faint">
         {label}
       </label>
-      {hint ? <p className="mt-1 text-caption text-muted">{hint}</p> : null}
-      <div className="mt-2.5">{children}</div>
+      {hint ? (
+        <p className="mt-1.5 text-caption leading-normal text-muted">{hint}</p>
+      ) : null}
+      <div className="mt-auto pt-3">{children}</div>
     </div>
   );
 }
@@ -72,31 +80,38 @@ export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 }
 
 /**
- * 金额输入。稿子里金额是**一条底线上的 Anton 数字**，不是描边盒子 ——
- * 钱是这一页的主角，给它一条实的下划线就够了，四面描边只会把它降成普通字段。
+ * 金额输入。与文本框共用 `.field-input` 外壳 —— 钱的重量由 Anton 数字本身给，
+ * 不需要再换一套边框语言（换了并排就对不齐，见 `Field` 的注释）。
  */
 export function AmountInput({
   id,
   value,
   onChange,
   placeholder = "0",
+  ariaLabel,
 }: {
   id?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  ariaLabel?: string;
 }) {
   return (
-    <div className="flex items-baseline gap-1.5 border-b-2 border-ink px-1 pb-1.5 focus-within:border-seal">
-      <span className="font-number text-section text-faint">$</span>
-      <input
-        id={id}
-        className="w-full min-w-0 border-0 bg-transparent p-0 font-number text-num-sm text-ink outline-none placeholder:text-faint/60"
-        inputMode="decimal"
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-      />
+    <div className="field-input field-input--amount">
+      <span className="field-amount-row">
+        <span className="font-number text-section text-faint" aria-hidden="true">
+          $
+        </span>
+        <input
+          id={id}
+          aria-label={ariaLabel}
+          className="w-full min-w-0 border-0 bg-transparent p-0 font-number text-num-sm leading-none text-ink outline-none placeholder:text-faint/50"
+          inputMode="decimal"
+          value={value}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </span>
     </div>
   );
 }
@@ -114,7 +129,7 @@ export function DateInput({
     <input
       id={id}
       type="date"
-      className="w-full border-0 border-b-2 border-ink bg-transparent px-1 pb-1.5 font-mono text-section text-ink outline-none focus:border-seal"
+      className="field-input font-mono text-section text-ink"
       value={value}
       onChange={(event) => onChange(event.target.value)}
     />

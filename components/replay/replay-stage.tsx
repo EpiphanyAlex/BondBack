@@ -77,10 +77,16 @@ function fieldValue(field: PrefillField, input: CaseInput): ReactNode {
   }
 }
 
-/** 顶上那条五段进度。段名与稿子一致，也正好是这条流水线的五个动作。 */
+/**
+ * 顶上那条五段进度，正好是这条流水线的五个动作。
+ *
+ * 头两段原来叫「材料飞入」「字段预填」：前者说的是动画怎么演，后者「预填」「字段」
+ * 是做表单的人的词（右栏那个标题早就为此改成了「它替你填好的」）。
+ * 现在两段各自跟屏上已有的说法对齐 —— 左栏写「已到 N」，右栏写「它替你填好的」。
+ */
 const PHASES = [
-  "01 材料飞入",
-  "02 字段预填",
+  "01 材料到齐",
+  "02 替你填好",
   "03 读出事实",
   "04 逐张翻开",
   "05 判决",
@@ -135,14 +141,12 @@ export function ReplayStage({
     <section className="min-h-dvh bg-ink text-paper">
       <div className="mx-auto w-full max-w-[1152px] px-4 py-10 md:px-6 md:py-12">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-4">
-          <div>
-            <p className="font-mono text-micro text-amount-hero">
-              示例重放 · 断网可看 · 零 API 调用
-            </p>
-            <h1 className="h-shout mt-3 text-display">
-              一个 {caseInput.state} 案子，从材料到判决
-            </h1>
-          </div>
+          {/* 标题独扛左边。原来上面压着一行「示例重放 · 断网可看 · 零 API 调用」——
+              「断网可看」「零 API 调用」是讲给做这东西的人听的，看的人不关心；
+              「示例」右边那颗虚构徽章已经说了。删掉，标题自己就是这一屏的论点。 */}
+          <h1 className="h-shout text-display">
+            一个 {caseInput.state} 案子，从材料到判决
+          </h1>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             {/* 军规：示例必须标虚构，而且要在第 0 拍就在场 */}
             <p className="inline-flex items-center gap-2.5 border border-gold-bright/50 px-4 py-2">
@@ -198,7 +202,7 @@ export function ReplayStage({
             {current?.labelZh ?? "准备重放这个案子的分析过程"}
           </p>
           <p className="mt-1 text-label text-paper/50">
-            {current?.detailZh ?? "全程零网络请求，断网也能看完"}
+            {current?.detailZh ?? "四份材料、三笔扣款，从头播一遍"}
           </p>
         </div>
 

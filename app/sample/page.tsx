@@ -89,9 +89,13 @@ export default function SamplePage() {
 
       {/* 卡靠左、说明靠右，整块收在一张卡面里、限宽 880 ——
           上一版标题压在卡上方、说明只有两行贴在卡右边，卡右侧空出大半个屏，
-          在桌面上像是布局塌了一半。标题搬到右栏，卡与文字互相收边。 */}
+          在桌面上像是布局塌了一半。标题搬到右栏，卡与文字互相收边。
+
+          `mx-auto`：这一块比容器窄 224，不居中就贴着容器左边，右侧凭空多出一截
+          空白，而它上面整页内容又是从 140 的行动栏往右排的 —— 左不对齐、右不到底，
+          谁也不挨着。既然对不齐上面，就干脆自己居中，读成一张独立的收尾卡面。 */}
       <section className="mx-auto w-full max-w-[1152px] border-t border-line px-4 pb-12 pt-9 md:px-6">
-        <div className="max-w-[880px] border border-line bg-card p-5 md:p-7 lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-9">
+        <div className="mx-auto max-w-[880px] border border-line bg-card p-5 md:p-7 lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-9">
           <WarCardShare
             sample
             bondAmount={SAMPLE_CASE_INPUT.bondAmount}
@@ -101,8 +105,10 @@ export default function SamplePage() {
             stateLabel={SAMPLE_CASE_INPUT.state}
           />
 
-          {/* 右栏收在一个 CTA 上：看完别人的案子，下一步本来就是跑自己的 */}
-          <div className="mt-6 flex flex-col lg:mt-0">
+          {/* 右栏收在一个 CTA 上：看完别人的案子，下一步本来就是跑自己的。
+              整栏对着卡居中，不再把 CTA 用 `mt-auto` 顶到卡底 —— 右边只有四行字，
+              硬撑到 480 高的卡底，中间那段空白比字还长。 */}
+          <div className="mt-6 flex flex-col lg:mt-0 lg:justify-center">
             <h2 className="h-shout text-title text-ink">带走这张战报卡</h2>
             <p className="mt-2.5 text-label text-muted">
               转发给还在纠结要不要认栽的室友。
@@ -118,7 +124,7 @@ export default function SamplePage() {
               ))}
             </ul>
 
-            <div className="mt-7 border-t border-line pt-6 lg:mt-auto">
+            <div className="mt-7 border-t border-line pt-6">
               <p className="text-section text-ink">
                 这张卡上的每个数字，都是从上面那四份材料里读出来的。
               </p>
@@ -157,7 +163,7 @@ function SampleBanner({
             onClick={onReplay}
             className="font-mono text-micro text-ink underline underline-offset-4"
           >
-            再看一遍重放
+            再看一遍
           </button>
         ) : null}
         <Link

@@ -105,6 +105,23 @@ export function StepAmounts({
               }}
             />
           </Field>
+
+          <Field
+            label="押金号"
+            htmlFor="bond-number"
+            hint="选填。填了维权信抬头会直接引用，对方查起来快一步。"
+            highlight={filled("bondNumber")}
+          >
+            <TextInput
+              id="bond-number"
+              value={draft.bondNumber}
+              placeholder="例如 RB-2025-402917"
+              onChange={(event) => {
+                markTouched("bondNumber");
+                updateDraft({ bondNumber: event.target.value });
+              }}
+            />
+          </Field>
         </div>
 
         {claimedOverBond ? (

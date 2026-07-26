@@ -40,6 +40,7 @@ const FIELD_LABEL: Record<PrefillField, string> = {
   moveOutDate: "退租日期",
   deductions: "扣款明细",
   propertyAddress: "物业地址",
+  bondNumber: "押金号",
 };
 
 function fieldValue(field: PrefillField, input: CaseInput): string {
@@ -54,6 +55,8 @@ function fieldValue(field: PrefillField, input: CaseInput): string {
       return input.moveOutDate;
     case "propertyAddress":
       return input.propertyAddress ?? "—";
+    case "bondNumber":
+      return input.bondNumber ?? "—";
   }
 }
 

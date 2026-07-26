@@ -48,6 +48,7 @@ export interface CaseDraft {
   deductions: DeductionDraft[];
   evidence: EvidenceImage[];
   propertyAddress: string;
+  bondNumber: string;
   notes: string;
 }
 
@@ -57,6 +58,7 @@ export const PREFILLABLE_FIELDS = [
   "claimedAmount",
   "moveOutDate",
   "propertyAddress",
+  "bondNumber",
   "deductions",
 ] as const;
 
@@ -98,6 +100,7 @@ export function createEmptyDraft(): CaseDraft {
     deductions: [createDeductionDraft()],
     evidence: [],
     propertyAddress: "",
+    bondNumber: "",
     notes: "",
   };
 }
@@ -169,6 +172,7 @@ export function toCaseInput(draft: CaseDraft): CaseInput {
     ...(draft.propertyAddress.trim()
       ? { propertyAddress: draft.propertyAddress.trim() }
       : {}),
+    ...(draft.bondNumber.trim() ? { bondNumber: draft.bondNumber.trim() } : {}),
     ...(draft.notes.trim() ? { notes: draft.notes.trim() } : {}),
   };
 
@@ -242,6 +246,14 @@ export function applyExtractedFields(
     }
   }
 
+  if (fields.bondNumber !== undefined && canFill("bondNumber", draft.bondNumber)) {
+    const value = fields.bondNumber.trim();
+    if (value) {
+      patch.bondNumber = value;
+      filled.push("bondNumber");
+    }
+  }
+
   if (
     fields.deductions !== undefined &&
     fields.deductions.length > 0 &&
@@ -276,5 +288,6 @@ export const PREFILL_FIELD_LABELS: Record<PrefillableField, string> = {
   claimedAmount: "被扣金额",
   moveOutDate: "退租日期",
   propertyAddress: "房屋地址",
+  bondNumber: "押金号",
   deductions: "扣款明细",
 };

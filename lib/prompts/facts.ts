@@ -30,7 +30,7 @@ What matters most, by evidence type:
 - room: only what a photo plainly shows (e.g. a mark on a wall, a clean oven). Do not diagnose the cause.
 - other: anything that states an amount, a date, an obligation or a condition of the premises.
 
-Return between 0 and 30 facts. Fewer high-quality verbatim facts beat many vague ones.`;
+Return between 0 and 40 facts — this is the hard cap; anything beyond the 40th is discarded, so put the most load-bearing facts (pre-existing damage, cleanliness at the start of the tenancy, end-of-tenancy obligations, admissions, claimed amounts, missing invoices) first. Fewer high-quality verbatim facts beat many vague ones.`;
 
 const KIND_LABEL_EN: Record<EvidenceKind, string> = {
   "condition-report": "condition report (ingoing/outgoing property condition)",

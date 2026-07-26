@@ -101,6 +101,8 @@ export interface CaseInput {
   deductions: Deduction[];
   evidence: EvidenceImage[];
   propertyAddress?: string;
+  /** 押金存管编号（NSW 的 RB-xxxx / VIC 的 bond number）；申诉信抬头要引用它 */
+  bondNumber?: string;
   notes?: string;
 }
 
@@ -112,6 +114,7 @@ export type ExtractedCaseFields = Partial<
     | "moveOutDate"
     | "deductions"
     | "propertyAddress"
+    | "bondNumber"
   >
 >;
 

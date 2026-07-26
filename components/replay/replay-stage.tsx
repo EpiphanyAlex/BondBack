@@ -151,13 +151,14 @@ export function ReplayStage({
                 文件与当事人均为虚构
               </span>
             </p>
-            {/* 唯一的控制。放在顶栏右上角 —— 想跳过的人本来就往这里找 */}
+            {/* 唯一的控制。放在顶栏右上角 —— 想跳过的人本来就往这里找。
+                只写「跳过」：整幅屏就是这段重放，跳过的宾语没有第二种可能 */}
             <button
               type="button"
               onClick={onSkip}
               className="border border-paper/35 px-4 py-2 font-mono text-micro text-paper transition-colors duration-150 hover:bg-paper/10"
             >
-              跳过重放 →
+              跳过 →
             </button>
           </div>
         </div>

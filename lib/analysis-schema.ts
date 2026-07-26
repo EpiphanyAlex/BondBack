@@ -20,7 +20,11 @@ import {
 
 /* ── ① /api/facts ────────────────────────────────────────────────────── */
 
-/** 一次最多接受多少条事实，防止模型把整页文字逐行倒出来 */
+/**
+ * 一次最多接受多少条事实，防止模型把整页文字逐行倒出来。
+ * **改这个数必须同步改 `lib/prompts/facts.ts` 末尾那句 "between 0 and N facts"** ——
+ * 两边不一致时模型会按提示词的数交货，超出的部分在这里被静默截掉。
+ */
 export const MAX_FACTS = 40;
 const MAX_LOCATOR_LENGTH = 120;
 const MAX_QUOTE_LENGTH = 400;
@@ -355,6 +359,7 @@ const caseInputSchema = z.object({
     .max(24)
     .catch([]),
   propertyAddress: z.string().max(200).optional().catch(undefined),
+  bondNumber: z.string().max(60).optional().catch(undefined),
   notes: z.string().max(2000).optional().catch(undefined),
 });
 

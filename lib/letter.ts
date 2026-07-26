@@ -182,7 +182,7 @@ export function buildLetter({
       "",
       "To: The landlord / managing agent",
       `Property: ${address}`,
-      "Bond reference: [your bond number]",
+      `Bond reference: ${input.bondNumber?.trim() || "[your bond number]"}`,
     ].join("\n"),
   );
 
@@ -267,7 +267,9 @@ function buildLetterNotesZh(
     perItem,
     "",
     "发送前请做三件事：",
-    "1. 替换方括号占位符：[your bond number]（押金号）、[Your name]、[Your phone number]、[Your email]。",
+    input.bondNumber?.trim()
+      ? "1. 替换方括号占位符：[Your name]、[Your phone number]、[Your email]。押金号已经按你填的填好了。"
+      : "1. 替换方括号占位符：[your bond number]（押金号）、[Your name]、[Your phone number]、[Your email]。",
     `2. 用邮件发送并保留原件与发送时间；同一份内容之后也可以提交给 ${BOND_AUTHORITY_ZH[input.state]}或 tribunal。`,
     "3. 附件按信末清单一起发出。",
     "",

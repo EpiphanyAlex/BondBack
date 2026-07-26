@@ -12,6 +12,8 @@ import type { ExtractedCaseFields } from "@/lib/types";
 /** 一次最多接受多少条扣款明细，防止模型把整页文字拆成几十行 */
 const MAX_DEDUCTIONS = 12;
 const MAX_TEXT_LENGTH = 200;
+/** 押金号只是一串编号，长过这个多半是模型把整行说明抄了进来 */
+const MAX_BOND_NUMBER_LENGTH = 60;
 
 /** strict 模式要求所有字段 required，可空字段用 null 表示「没读到」。 */
 export const EXTRACT_JSON_SCHEMA = {
@@ -22,6 +24,7 @@ export const EXTRACT_JSON_SCHEMA = {
     "claimedAmount",
     "moveOutDate",
     "propertyAddress",
+    "bondNumber",
     "deductions",
   ],
   properties: {
@@ -40,6 +43,11 @@ export const EXTRACT_JSON_SCHEMA = {
     propertyAddress: {
       type: ["string", "null"],
       description: "租赁房屋地址原文。没有就返回 null。",
+    },
+    bondNumber: {
+      type: ["string", "null"],
+      description:
+        "押金存管编号原文（NSW 常见形如 RB-2025-402917 / rental bond number；VIC 为 bond number）。逐字照抄，不要改格式。没有明确写出就返回 null。",
     },
     deductions: {
       type: ["array", "null"],
@@ -71,6 +79,7 @@ const extractPayloadSchema = z.object({
   claimedAmount: amountSchema,
   moveOutDate: z.string().max(40).nullable(),
   propertyAddress: z.string().max(MAX_TEXT_LENGTH).nullable(),
+  bondNumber: z.string().max(MAX_BOND_NUMBER_LENGTH).nullable(),
   deductions: z
     .array(
       z.object({
@@ -107,6 +116,9 @@ export function parseExtractPayload(raw: unknown): ExtractedCaseFields {
   }
   if (data.propertyAddress !== null && data.propertyAddress.trim()) {
     fields.propertyAddress = data.propertyAddress.trim();
+  }
+  if (data.bondNumber !== null && data.bondNumber.trim()) {
+    fields.bondNumber = data.bondNumber.trim();
   }
   if (data.deductions !== null) {
     const deductions = data.deductions

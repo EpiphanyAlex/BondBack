@@ -151,14 +151,30 @@ function sanitizeText(
     .trim();
 }
 
+/**
+ * 有些法条条目一条横跨两个法源（如 fair wear and tear 同时来自 Act 与 Regulation），
+ * 数据里就写成 `act: "A; B"` / `section: "s 51(3)(b); Sch 2"`。直接按整串分组会拼成
+ * 「A; B: s 51(3)(b); Sch 2」，读起来分不清哪个 section 属于哪部法。数量对得上就拆回配对。
+ */
+function splitPairs(ref: StatuteRef): Array<[string, string]> {
+  const acts = ref.act.split(";").map((part) => part.trim()).filter(Boolean);
+  const sections = ref.section.split(";").map((part) => part.trim()).filter(Boolean);
+  if (acts.length > 1 && acts.length === sections.length) {
+    return acts.map((act, index) => [act, sections[index]] as [string, string]);
+  }
+  return [[ref.act, ref.section]];
+}
+
 /** 法条编号由代码追加到段落末尾 —— 信与卡片因此永远一致。 */
 function citationSuffix(refs: StatuteRef[]): string {
   if (refs.length === 0) return "";
   const byAct = new Map<string, string[]>();
   for (const ref of refs) {
-    const sections = byAct.get(ref.act) ?? [];
-    if (!sections.includes(ref.section)) sections.push(ref.section);
-    byAct.set(ref.act, sections);
+    for (const [act, section] of splitPairs(ref)) {
+      const sections = byAct.get(act) ?? [];
+      if (!sections.includes(section)) sections.push(section);
+      byAct.set(act, sections);
+    }
   }
   const parts = Array.from(byAct, ([act, sections]) => `${act}: ${sections.join("; ")}`);
   return ` — see ${parts.join(" | ")}.`;

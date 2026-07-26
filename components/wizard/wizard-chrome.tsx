@@ -9,6 +9,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BrandLockup } from "@/components/brand-lockup";
+
 export interface WizardStepMeta {
   id: string;
   title: string;
@@ -50,7 +52,9 @@ export function WizardTopBar({
           </button>
         )}
 
-        <span className="h-shout hidden text-section md:inline">押金侠</span>
+        <Link href="/" className="hidden md:inline-flex" aria-label="押金侠首页">
+          <BrandLockup compact />
+        </Link>
 
         <div className="flex flex-1 items-center gap-2" aria-hidden="true">
           {steps.map((step, index) => (

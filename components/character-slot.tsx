@@ -1,8 +1,8 @@
 /**
  * 押金侠的角色形象位（稿子 §01 第 1 幕右格、§03 分析中右栏）。
  *
- * 画师的图还没到，所以这里先摆一个**明显是占位**的斜纹框：写清楚这一格要什么
- * （全身 / 半身、什么姿势、透明底 PNG），而不是留一片空白让人以为布局塌了。
+ * 有角色图时直接渲染透明底资产；没有图时才摆一个**明显是占位**的斜纹框，
+ * 写清楚这一格要什么（全身 / 半身、什么姿势、透明底 PNG）。
  *
  * 图到了之后**只改调用点的一行**：给 `src` 传路径（放 `public/`），
  * 占位框自动让位，尺寸与位置都不用动。
@@ -19,6 +19,8 @@ export interface CharacterSlotProps {
   alt?: string;
   /** 占位框上的说明：这一格要的是哪一张 */
   briefZh: string;
+  /** 首屏主视觉要抢先下载；分析中的动作图保持懒加载 */
+  eager?: boolean;
   className?: string;
 }
 
@@ -26,6 +28,7 @@ export function CharacterSlot({
   src,
   alt = "押金侠",
   briefZh,
+  eager = false,
   className,
 }: CharacterSlotProps) {
   if (src) {
@@ -34,6 +37,9 @@ export function CharacterSlot({
       <img
         src={src}
         alt={alt}
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : "auto"}
+        decoding="async"
         className={cx("h-full w-full object-contain", className)}
       />
     );

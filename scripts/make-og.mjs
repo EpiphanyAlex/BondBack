@@ -31,8 +31,10 @@ export const OG_TEXT = {
 
 /* ── 颜色：globals.css :root 的字面值（脚本读不到 CSS 变量）──────────── */
 
-const INK = "#12212f";
-const GOLD = "#e8a33d";
+const INK = "#14110f";
+const PAPER = "#f6f1e6";
+const SEAL = "#e23d28";
+const GOLD = "#e9b44c";
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -41,7 +43,7 @@ const HEIGHT = 630;
  * 微信在聊天里把缩略图**居中裁成正方形**（1200×630 → 中间 630×630）。
  * 所以整张图走居中栈，横向别超过 ~600px —— 裁完还得读得出「押金侠」。
  */
-function card() {
+function card(logoSrc) {
   return h(
     "div",
     {
@@ -57,7 +59,7 @@ function card() {
         position: "relative",
       },
     },
-    // 公文感的金色细框
+    // 「江湖战报」方角细框 —— OG 也跟全站同一套墨黑 / 米白 / 朱红
     h("div", {
       style: {
         position: "absolute",
@@ -65,19 +67,27 @@ function card() {
         left: 26,
         right: 26,
         bottom: 26,
-        border: `1px solid ${GOLD}`,
-        opacity: 0.35,
-        borderRadius: 10,
+        border: `1px solid ${PAPER}`,
+        opacity: 0.16,
+      },
+    }),
+    h("img", {
+      src: logoSrc,
+      width: 72,
+      height: 72,
+      style: {
+        objectFit: "contain",
       },
     }),
     h(
       "div",
       {
         style: {
-          fontSize: 26,
+          marginTop: 10,
+          fontSize: 24,
           fontWeight: 400,
           letterSpacing: 8,
-          color: "rgba(255,255,255,0.55)",
+          color: "rgba(246,241,230,0.55)",
         },
       },
       OG_TEXT.kicker,
@@ -86,12 +96,12 @@ function card() {
       "div",
       {
         style: {
-          marginTop: 14,
-          fontSize: 150,
+          marginTop: 8,
+          fontSize: 126,
           fontWeight: 700,
           letterSpacing: 10,
           lineHeight: 1.05,
-          color: "#ffffff",
+          color: PAPER,
         },
       },
       OG_TEXT.wordmark,
@@ -100,8 +110,8 @@ function card() {
       "div",
       {
         style: {
-          marginTop: 6,
-          fontSize: 46,
+          marginTop: 2,
+          fontSize: 40,
           fontWeight: 700,
           letterSpacing: 14,
           color: GOLD,
@@ -114,8 +124,7 @@ function card() {
         marginTop: 26,
         width: 132,
         height: 3,
-        backgroundColor: GOLD,
-        opacity: 0.75,
+        backgroundColor: SEAL,
       },
     }),
     h(
@@ -125,7 +134,7 @@ function card() {
           marginTop: 26,
           fontSize: 32,
           fontWeight: 700,
-          color: "rgba(255,255,255,0.92)",
+          color: "rgba(246,241,230,0.92)",
         },
       },
       OG_TEXT.tagline1,
@@ -137,7 +146,7 @@ function card() {
           marginTop: 10,
           fontSize: 27,
           fontWeight: 400,
-          color: "rgba(255,255,255,0.62)",
+          color: "rgba(246,241,230,0.62)",
         },
       },
       OG_TEXT.tagline2,
@@ -151,7 +160,7 @@ function card() {
           fontSize: 20,
           fontWeight: 400,
           letterSpacing: 2,
-          color: "rgba(255,255,255,0.38)",
+          color: "rgba(246,241,230,0.38)",
         },
       },
       OG_TEXT.footer,
@@ -161,8 +170,12 @@ function card() {
 
 async function render() {
   const fontDir = new URL("./og-fonts/", import.meta.url);
+  const logoData = await readFile(
+    new URL("../public/brand/logo-mark.png", import.meta.url),
+  );
+  const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
 
-  const response = new ImageResponse(card(), {
+  const response = new ImageResponse(card(logoSrc), {
     width: WIDTH,
     height: HEIGHT,
     fonts: [

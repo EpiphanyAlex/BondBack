@@ -15,6 +15,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { BrandLockup } from "@/components/brand-lockup";
 import { CharacterSlot } from "@/components/character-slot";
 import { parseAmount } from "@/lib/case-draft";
 import { useCaseSession } from "@/lib/case-session";
@@ -49,10 +50,9 @@ export function HomeHero() {
       <div className="mx-auto w-full max-w-[1152px] px-4 md:px-6">
         {/* ── 顶栏 ── */}
         <header className="flex items-center justify-between border-b border-paper/12 py-4 md:py-5">
-          <div className="flex items-baseline gap-3">
-            <span className="h-shout text-title">押金侠</span>
-            <span className="font-mono text-micro text-paper/45">BONDBACK</span>
-          </div>
+          <Link href="/" aria-label="押金侠首页">
+            <BrandLockup />
+          </Link>
           <nav className="flex items-center gap-5 md:gap-8">
             <a href="#how" className="text-label text-paper/60">
               怎么判
@@ -66,7 +66,7 @@ export function HomeHero() {
           </nav>
         </header>
 
-        <div className="grid gap-8 pt-10 pb-8 md:pt-12 lg:grid-cols-[1.28fr_0.72fr] lg:gap-12 lg:pb-12">
+        <div className="grid gap-8 pt-10 pb-8 md:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pb-0">
           {/* ── 左：喊话 + 合体式金额 + 主行动 ── */}
           <div>
             <p className="font-mono text-micro text-amount-hero">
@@ -124,11 +124,13 @@ export function HomeHero() {
 
           </div>
 
-          {/* ── 右：押金侠 ──
-              图由画师提供，`src` 一给占位框就退场（见 CharacterSlot）。 */}
+          {/* ── 右：方案一「卷宗游侠」—— 传统侠客 × 现代证据分析的反差。 */}
           <CharacterSlot
-            className="min-h-[320px] lg:min-h-[520px]"
-            briefZh={"押金侠 · 角色形象\n全身 / 抱臂等你填\n透明底 PNG · 待画师提供"}
+            src="/character/hero-xia.png"
+            alt="押金侠俯身用放大镜核对证据卷宗与 NSW、VIC 租赁法资料"
+            eager
+            className="min-h-[320px] object-bottom lg:min-h-[600px] lg:origin-bottom-right lg:scale-125"
+            briefZh={"押金侠 · 卷宗游侠\n俯身查证据与法条"}
           />
         </div>
       </div>

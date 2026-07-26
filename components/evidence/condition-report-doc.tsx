@@ -260,7 +260,9 @@ export function ConditionReportDoc({
       </DocPage>
 
       <p className="border-t border-line px-4 py-2.5 text-caption text-muted md:px-5">
-        本页为示例案例的虚构文件，仅用于演示 BondBack 的对照能力。
+        {/* 军规要的是「标虚构」。原来后半句「仅用于演示 BondBack 的对照能力」
+            是讲给评委听的自我介绍，看文件的人只需要知道这份是假的。 */}
+        本页为示例案例的虚构文件，不是真实的入住报告。
       </p>
     </div>
   );

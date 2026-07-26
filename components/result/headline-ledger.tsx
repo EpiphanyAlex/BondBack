@@ -110,15 +110,19 @@ export function HeadlineLedger({
             </p>
           </div>
 
-          {/* 可争议：整页最大的一个数字，只能坐在这块深色上 */}
+          {/* 可争议：整页最大的一个数字，只能坐在这块深色上。
+              名头走在数字底下，不压在右上角 —— 原来「可争议」是 micro + 55% 透明度
+              右对齐吊在数字肩上，字小、对比又弱，在整页最大的一个数字旁边根本读不到，
+              看着像被挤出去的一截。战报卡上早就是「数字 → 可争议扣款」这个顺序，
+              这里跟上：先给钱，再说这笔钱是什么。 */}
           <div className="mt-7 shrink-0 lg:mt-0 lg:text-right">
-            <p className="font-mono text-micro text-paper/55">可争议</p>
             <p className="font-number text-num-xl leading-[0.82] text-amount-hero">
               {formatMoney(ledger.disputableTotal) === "—"
                 ? "—"
                 : `$${formatMoney(ledger.disputableTotal)}`}
             </p>
-            <p className="mt-2.5 text-body text-paper/75">
+            <p className="mt-3 text-section font-bold text-paper">可争议扣款</p>
+            <p className="mt-2 text-body text-paper/75">
               应退回至少{" "}
               <span className="font-bold text-paper">
                 {money(ledger.refundExpected)}

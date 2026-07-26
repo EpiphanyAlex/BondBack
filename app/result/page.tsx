@@ -51,7 +51,7 @@ function ResultPageInner() {
         caseInput={SAMPLE_CASE_INPUT}
         analysis={SAMPLE_ANALYSIS}
         showSampleDocuments
-        sampleNote="示例案例预览 · 全部文件与当事人均为虚构，用于演示对照能力。"
+        sampleNote="示例案例预览 · 全部文件与当事人均为虚构；你的案子会实时分析。"
       />
     );
   }
